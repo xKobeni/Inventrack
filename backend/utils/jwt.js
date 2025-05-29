@@ -32,4 +32,20 @@ const isTokenExpired = (token) => {
     }
 }
 
+// Store for blacklisted tokens (in memory - consider using Redis for production)
+const tokenBlacklist = new Set();
+
+const blacklistToken = (token) => {
+    tokenBlacklist.add(token);
+}
+
+const isTokenBlacklisted = (token) => {
+    return tokenBlacklist.has(token);
+}
+
+const removeFromBlacklist = (token) => {
+    tokenBlacklist.delete(token);
+}
+
+
 export { generateToken, verifyToken, isTokenExpired };
