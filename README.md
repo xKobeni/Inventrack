@@ -14,6 +14,8 @@ Inventrack is a modern inventory management system built with Node.js, Express, 
 - 🎨 Modern, responsive UI with Tailwind CSS
 - 🔄 Real-time updates and notifications
 - 📱 Mobile-friendly design
+- 🎯 Reusable UI components
+- 🔑 Role-based access control
 
 ## Tech Stack
 
@@ -38,6 +40,7 @@ Inventrack is a modern inventory management system built with Node.js, Express, 
 - React Router for navigation
 - Axios for API integration
 - React Hot Toast for notifications
+- Lucide React for icons
 - ESLint for code quality
 - PostCSS for CSS processing
 
@@ -100,7 +103,8 @@ The frontend will be available at http://localhost:5173
 ## Documentation
 
 - [API Documentation](./API.md) - Detailed API endpoints and usage
-- [Frontend Documentation](./FRONTEND.md) - Frontend architecture and setup
+- [Postman Documentation](./POSTMAN.md) - API testing and Postman collection guide
+- [Frontend Documentation](./frontend.md) - Frontend architecture and setup
 - [Libraries Documentation](./LIBRARIES.md) - Detailed library information
 
 ## Project Structure
@@ -118,10 +122,19 @@ inventrack/
 │   ├── app.js          # Express app setup
 │   └── server.js       # Server entry point
 ├── frontend/
-│   ├── src/            # Source files
-│   ├── public/         # Static assets
-│   ├── index.html      # Entry HTML file
-│   └── package.json    # Frontend dependencies
+│   ├── src/
+│   │   ├── components/ # Reusable UI components
+│   │   │   ├── ui/    # Base UI components
+│   │   │   └── ...    # Other components
+│   │   ├── pages/     # Page components
+│   │   ├── hooks/     # Custom React hooks
+│   │   ├── store/     # Zustand store
+│   │   ├── utils/     # Utility functions
+│   │   ├── api/       # API integration
+│   │   └── App.jsx    # Root component
+│   ├── public/        # Static assets
+│   ├── index.html     # Entry HTML file
+│   └── package.json   # Frontend dependencies
 ├── .env               # Environment variables
 ├── package.json       # Backend dependencies
 └── README.md         # Project documentation
@@ -132,6 +145,8 @@ inventrack/
 ### Backend
 - `npm run dev` - Start development server
 - `npm run db:init` - Initialize database
+- `npm run test` - Run tests
+- `npm run lint` - Run ESLint
 
 ### Frontend
 - `npm run dev` - Start development server
@@ -153,6 +168,6 @@ This project is licensed under the ISC License.
 
 ## Contact
 
-Your Name - your.email@example.com
+Your Name - johnadrian.perce@gmail.com
 
-Project Link: [https://github.com/yourusername/inventrack](https://github.com/yourusername/inventrack) 
+Project Link: [https://github.com/xKobeni/Inventrack](https://github.com/xKobeni/Inventrack) 

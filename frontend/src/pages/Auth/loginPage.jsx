@@ -1,25 +1,31 @@
-import React from 'react';
+import { GalleryVerticalEnd } from "lucide-react";
+import { LoginForm } from "@/components/login-form";
 
-const LoginPage = () => {
+export default function LoginPage() {
   return (
-    <>
-      <div className='flex flex-column h-screen w-screen bg-gray-300 '>
-        {/* left side */}
-        <div className="w-full md:w-1/2 h-full flex items-center justify-center bg-slate-200">
-          <div className="p-8">
-            {/* Content for left side */}
-          </div>
+    <div className="grid min-h-svh lg:grid-cols-2">
+      <div className="flex flex-col gap-4 p-6 md:p-10">
+        <div className="flex justify-center gap-2 md:justify-start">
+          <a href="#" className="flex items-center gap-2 font-medium">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <GalleryVerticalEnd className="size-4" />
+            </div>
+            InvenTrack
+          </a>
         </div>
-
-        {/* right side */}
-        <div className="hidden md:flex w-1/2 h-full items-center justify-center bg-gray-300">
-          <div className="p-8">
-            {/* Content for right side */}
+        <div className="flex flex-1 items-center justify-center">
+          <div className="w-full max-w-xs">
+            <LoginForm />
           </div>
         </div>
       </div>
-    </>
+      <div className="relative hidden bg-muted lg:block">
+        <img
+          src="/placeholder.svg"
+          alt="Image"
+          className="rounded-lg p-8 absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+        />
+      </div>
+    </div>
   );
-};
-
-export default LoginPage;
+}

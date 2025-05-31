@@ -5,6 +5,7 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
 import authRoutes from "./routes/auth.routes.js";
+import userRoutes from "./routes/user.routes.js";
 
 dotenv.config(); // Load environment variables from .env file
 const app = express();
@@ -25,13 +26,9 @@ app.use(cors());
 app.use(helmet()); // Security middleware for HTTP headers
 app.use(morgan("dev")); // Logging middleware
 
-// Routes
-app.get("/", (req, res) => {
-    res.send("Hello, sino ka ba ha!");
-});
-
 // Import routes
 app.use("/auth", authRoutes);
+app.use("/users", userRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
