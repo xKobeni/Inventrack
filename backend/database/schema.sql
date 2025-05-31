@@ -1,18 +1,29 @@
 -- database/schema.sql
 
+CREATE TABLE IF NOT EXISTS departments (
+    department_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL PRIMARY KEY,
-    name VARCHAR(100),
+    name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    role VARCHAR(50),
+    role VARCHAR(50) NOT NULL CHECK (role IN ('admin', 'gso_staff', 'department_rep')),
+    department_id INTEGER REFERENCES departments(department_id),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS departments (
-    department_id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL
+CREATE TABLE IF NOT EXISTS access_permissions (
+    permission_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(user_id),
+    module VARCHAR(100) NOT NULL,
+    is_granted BOOLEAN DEFAULT FALSE,
+    requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    granted_at TIMESTAMP,
+    granted_by INTEGER REFERENCES users(user_id)
 );
 
 CREATE TABLE IF NOT EXISTS inventory_items (
@@ -25,6 +36,7 @@ CREATE TABLE IF NOT EXISTS inventory_items (
     condition VARCHAR(50) DEFAULT 'new',
     status VARCHAR(50) DEFAULT 'available',
     expiration_date DATE,
+    department_id INTEGER REFERENCES departments(department_id),
     created_by INTEGER REFERENCES users(user_id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -51,9 +63,9 @@ CREATE TABLE IF NOT EXISTS incident_reports (
     report_id SERIAL PRIMARY KEY,
     reported_by INTEGER REFERENCES users(user_id),
     item_id INTEGER REFERENCES inventory_items(item_id),
-    type VARCHAR(50) CHECK (type IN ('damage', 'loss', 'maintenance')),
+    type VARCHAR(50) NOT NULL CHECK (type IN ('damage', 'loss', 'maintenance')),
     description TEXT,
-    status VARCHAR(50) DEFAULT 'open',
+    status VARCHAR(50) DEFAULT 'open' CHECK (status IN ('open', 'resolved')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     resolved_by INTEGER REFERENCES users(user_id),
     resolved_at TIMESTAMP
