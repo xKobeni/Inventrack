@@ -5,7 +5,7 @@
   "main": "backend/server.js",
   "scripts": {
     "dev": "nodemon backend/server.js",
-    "db:init": "node database/setup.js"
+    "db:init": "node backend/database/setup.js"
   },
   "keywords": [],
   "type": "module",
