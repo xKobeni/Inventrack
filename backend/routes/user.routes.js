@@ -12,6 +12,7 @@ import {
     updateAnyUserProfile
 } from "../controllers/user.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
+import { updateProfileValidation, adminUpdateUserValidation, userIdValidation } from "../middleware/validation.js";
 
 const router = Router();
 
@@ -22,13 +23,13 @@ router.use(authMiddleware);
 router.get("/", fetchAllUsers);
 
 // Get user by ID
-router.get("/:id", fetchUserById);
+router.get("/:id", userIdValidation, fetchUserById);
 
 // Get current user profile
 router.get("/profile/me", getUserProfile);
 
 // Update user profile
-router.put("/profile/me", updateUserProfile);
+router.put("/profile/me", updateProfileValidation, updateUserProfile);
 
 // Delete user account
 router.delete("/profile/me", deleteUserAccount);
@@ -40,12 +41,12 @@ router.post("/profile/me/deactivate", deactivateUserAccount);
 router.post("/profile/me/activate", activateUserAccount);
 
 // Deactivate any user (admin only)
-router.post('/:id/deactivate', deactivateAnyUserAccount);
+router.post('/:id/deactivate', userIdValidation, deactivateAnyUserAccount);
 
 // Activate any user (admin only)
-router.post('/:id/activate', activateAnyUserAccount);
+router.post('/:id/activate', userIdValidation, activateAnyUserAccount);
 
 // Update any user profile (admin only)
-router.put('/:id', updateAnyUserProfile);
+router.put('/:id', [...userIdValidation, ...adminUpdateUserValidation], updateAnyUserProfile);
 
 export default router;

@@ -1,4 +1,4 @@
-import { body, validationResult } from 'express-validator';
+import { body, validationResult, param } from 'express-validator';
 
 // Validation middleware
 export const validate = (req, res, next) => {
@@ -39,25 +39,50 @@ export const loginValidation = [
     validate
 ];
 
-// Product validation
-export const productValidation = [
+// User profile update validation
+export const updateProfileValidation = [
     body('name')
+        .optional()
         .trim()
-        .notEmpty()
-        .withMessage('Product name is required'),
-    body('description')
-        .trim()
-        .notEmpty()
-        .withMessage('Product description is required'),
-    body('category')
-        .trim()
-        .notEmpty()
-        .withMessage('Product category is required'),
-    body('price')
-        .isFloat({ min: 0 })
-        .withMessage('Price must be a positive number'),
-    body('quantity')
-        .isInt({ min: 0 })
-        .withMessage('Quantity must be a positive integer'),
+        .isLength({ min: 2 })
+        .withMessage('Name must be at least 2 characters long'),
+    body('email')
+        .optional()
+        .isEmail()
+        .withMessage('Please enter a valid email'),
+    body('password')
+        .optional()
+        .isLength({ min: 6 })
+        .withMessage('Password must be at least 6 characters long'),
     validate
-]; 
+];
+
+// Admin user update validation
+export const adminUpdateUserValidation = [
+    body('name')
+        .optional()
+        .trim()
+        .isLength({ min: 2 })
+        .withMessage('Name must be at least 2 characters long'),
+    body('email')
+        .optional()
+        .isEmail()
+        .withMessage('Please enter a valid email'),
+    body('password')
+        .optional()
+        .isLength({ min: 6 })
+        .withMessage('Password must be at least 6 characters long'),
+    body('role')
+        .optional()
+        .isIn(['user', 'admin'])
+        .withMessage('Role must be either "user" or "admin"'),
+    validate
+];
+
+// User ID parameter validation
+export const userIdValidation = [
+    param('id')
+        .isInt()
+        .withMessage('User ID must be a valid integer'),
+    validate
+];
