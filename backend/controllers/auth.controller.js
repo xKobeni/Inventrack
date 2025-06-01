@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { generateToken } from '../utils/jwt.js';
 import { getUserByEmail, createUser } from '../models/user.models.js';
+import { addToBlacklist } from '../utils/tokenBlacklist.js';
 
 const login = async (req, res) => {
     const { email, password } = req.body;
@@ -63,8 +64,20 @@ const registerUser = async (req, res) => {
 }
 
 const logout = (req, res) => {
-    // Handle logout logic here, if needed
-    return res.status(200).json({ message: 'Logout successful' });
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer')) {
+            return res.status(401).json({ message: 'No token provided' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        addToBlacklist(token);
+        
+        return res.status(200).json({ message: 'Logout successful' });
+    } catch (error) {
+        console.error('Error during logout:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
 }
 
 

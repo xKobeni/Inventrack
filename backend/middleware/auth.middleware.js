@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { getUserByEmail } from '../models/user.models.js';
+import { isBlacklisted } from '../utils/tokenBlacklist.js';
 
 
 // Dito lang may problema sa pag fetch ng token sa header
@@ -18,6 +19,14 @@ export const authMiddleware = async (req, res, next) => {
 
         const token = authHeader.split(' ')[1];
         //console.log('Extracted Token:', token); // Debug extracted token
+
+        // Check if token is blacklisted
+        if (isBlacklisted(token)) {
+            return res.status(401).json({
+                success: false,
+                message: 'Token has been invalidated'
+            });
+        }
 
         // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
