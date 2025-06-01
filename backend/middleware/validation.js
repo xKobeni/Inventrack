@@ -86,3 +86,34 @@ export const userIdValidation = [
         .withMessage('User ID must be a valid integer'),
     validate
 ];
+
+// Department validation
+export const departmentValidation = [
+    body('name')
+        .trim()
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Department name must be between 2 and 100 characters long')
+        .matches(/^[a-zA-Z0-9\s\-_]+$/)
+        .withMessage('Department name can only contain letters, numbers, spaces, hyphens, and underscores'),
+    validate
+];
+
+// Department update validation
+export const departmentUpdateValidation = [
+    body('name')
+        .optional()
+        .trim()
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Department name must be between 2 and 100 characters long')
+        .matches(/^[a-zA-Z0-9\s\-_]+$/)
+        .withMessage('Department name can only contain letters, numbers, spaces, hyphens, and underscores'),
+    validate
+];
+
+// Department ID parameter validation
+export const departmentIdValidation = [
+    param('id')
+        .isInt()
+        .withMessage('Department ID must be a valid integer'),
+    validate
+];
