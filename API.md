@@ -16,6 +16,17 @@ All protected endpoints require a JWT token in the Authorization header:
 Authorization: Bearer <your_jwt_token>
 ```
 
+## Postman Collection
+
+You can import the Postman collection using the following link:
+[Inventrack API Collection](https://www.postman.com/collections/your-collection-id)
+
+The collection includes:
+- Environment variables setup
+- Pre-request scripts for authentication
+- Example requests for all endpoints
+- Test scripts for response validation
+
 ## API Endpoints
 
 ### Authentication
@@ -92,17 +103,167 @@ Response:
 }
 ```
 
-### Inventory Management
+### User Management
 
-#### Get All Products
+#### Get All Users
 ```http
-GET /api/products
+GET /users
 ```
 
 Query Parameters:
 - `page` (optional): Page number for pagination
 - `limit` (optional): Number of items per page
-- `search` (optional): Search term for product name/description
+- `search` (optional): Search term for username/email
+- `role` (optional): Filter by role
+
+Response:
+```json
+{
+    "success": true,
+    "data": {
+        "users": [
+            {
+                "id": "string",
+                "username": "string",
+                "email": "string",
+                "role": "string",
+                "createdAt": "date"
+            }
+        ],
+        "pagination": {
+            "total": "number",
+            "page": "number",
+            "limit": "number",
+            "pages": "number"
+        }
+    }
+}
+```
+
+#### Get User by ID
+```http
+GET /users/:id
+```
+
+Response:
+```json
+{
+    "success": true,
+    "data": {
+        "id": "string",
+        "username": "string",
+        "email": "string",
+        "role": "string",
+        "createdAt": "date"
+    }
+}
+```
+
+#### Update User
+```http
+PUT /users/:id
+```
+
+Request Body:
+```json
+{
+    "username": "string",
+    "email": "string",
+    "role": "string"
+}
+```
+
+Response:
+```json
+{
+    "success": true,
+    "message": "User updated successfully",
+    "data": {
+        "id": "string",
+        "username": "string",
+        "email": "string",
+        "role": "string",
+        "updatedAt": "date"
+    }
+}
+```
+
+### Department Management
+
+#### Get All Departments
+```http
+GET /departments
+```
+
+Query Parameters:
+- `page` (optional): Page number for pagination
+- `limit` (optional): Number of items per page
+- `search` (optional): Search term for department name
+
+Response:
+```json
+{
+    "success": true,
+    "data": {
+        "departments": [
+            {
+                "id": "string",
+                "name": "string",
+                "description": "string",
+                "manager": "string",
+                "createdAt": "date"
+            }
+        ],
+        "pagination": {
+            "total": "number",
+            "page": "number",
+            "limit": "number",
+            "pages": "number"
+        }
+    }
+}
+```
+
+#### Create Department
+```http
+POST /departments
+```
+
+Request Body:
+```json
+{
+    "name": "string",
+    "description": "string",
+    "manager": "string"
+}
+```
+
+Response:
+```json
+{
+    "success": true,
+    "message": "Department created successfully",
+    "data": {
+        "id": "string",
+        "name": "string",
+        "description": "string",
+        "manager": "string",
+        "createdAt": "date"
+    }
+}
+```
+
+### Inventory Management
+
+#### Get All Inventory Items
+```http
+GET /inventory
+```
+
+Query Parameters:
+- `page` (optional): Page number for pagination
+- `limit` (optional): Number of items per page
+- `search` (optional): Search term for item name/description
 - `category` (optional): Filter by category
 - `sort` (optional): Sort field (e.g., "name", "price", "createdAt")
 - `order` (optional): Sort order ("asc" or "desc")
@@ -112,7 +273,7 @@ Response:
 {
     "success": true,
     "data": {
-        "products": [
+        "items": [
             {
                 "id": "string",
                 "name": "string",
@@ -134,9 +295,9 @@ Response:
 }
 ```
 
-#### Get Product by ID
+#### Get Inventory Item by ID
 ```http
-GET /api/products/:id
+GET /inventory/:id
 ```
 
 Response:
@@ -156,9 +317,9 @@ Response:
 }
 ```
 
-#### Create Product
+#### Create Inventory Item
 ```http
-POST /api/products
+POST /inventory
 ```
 
 Request Body:
@@ -176,7 +337,7 @@ Response:
 ```json
 {
     "success": true,
-    "message": "Product created successfully",
+    "message": "Inventory item created successfully",
     "data": {
         "id": "string",
         "name": "string",
@@ -190,9 +351,9 @@ Response:
 }
 ```
 
-#### Update Product
+#### Update Inventory Item
 ```http
-PUT /api/products/:id
+PUT /inventory/:id
 ```
 
 Request Body:
@@ -210,7 +371,7 @@ Response:
 ```json
 {
     "success": true,
-    "message": "Product updated successfully",
+    "message": "Inventory item updated successfully",
     "data": {
         "id": "string",
         "name": "string",
@@ -224,16 +385,91 @@ Response:
 }
 ```
 
-#### Delete Product
+#### Delete Inventory Item
 ```http
-DELETE /api/products/:id
+DELETE /inventory/:id
 ```
 
 Response:
 ```json
 {
     "success": true,
-    "message": "Product deleted successfully"
+    "message": "Inventory item deleted successfully"
+}
+```
+
+### Procurement Management
+
+#### Get All Procurement Requests
+```http
+GET /procurement
+```
+
+Query Parameters:
+- `page` (optional): Page number for pagination
+- `limit` (optional): Number of items per page
+- `status` (optional): Filter by status (pending, approved, rejected)
+- `department` (optional): Filter by department
+- `dateFrom` (optional): Filter by start date
+- `dateTo` (optional): Filter by end date
+
+Response:
+```json
+{
+    "success": true,
+    "data": {
+        "requests": [
+            {
+                "id": "string",
+                "item": "string",
+                "quantity": "number",
+                "department": "string",
+                "requestedBy": "string",
+                "status": "string",
+                "createdAt": "date",
+                "updatedAt": "date"
+            }
+        ],
+        "pagination": {
+            "total": "number",
+            "page": "number",
+            "limit": "number",
+            "pages": "number"
+        }
+    }
+}
+```
+
+#### Create Procurement Request
+```http
+POST /procurement
+```
+
+Request Body:
+```json
+{
+    "item": "string",
+    "quantity": "number",
+    "department": "string",
+    "reason": "string",
+    "priority": "string" // high, medium, low
+}
+```
+
+Response:
+```json
+{
+    "success": true,
+    "message": "Procurement request created successfully",
+    "data": {
+        "id": "string",
+        "item": "string",
+        "quantity": "number",
+        "department": "string",
+        "requestedBy": "string",
+        "status": "pending",
+        "createdAt": "date"
+    }
 }
 ```
 
@@ -288,9 +524,12 @@ All endpoints may return the following error responses:
 
 ## Rate Limiting
 
-API requests are limited to:
-- 100 requests per minute for authenticated users
-- 20 requests per minute for unauthenticated users
+The API implements rate limiting:
+- 100 requests per 15 minutes per IP address
+- Rate limit headers are included in responses:
+  - `X-RateLimit-Limit`: Maximum requests per window
+  - `X-RateLimit-Remaining`: Remaining requests in current window
+  - `X-RateLimit-Reset`: Time when the rate limit resets
 
 ## Data Types
 
