@@ -7,6 +7,7 @@ import rateLimit from "express-rate-limit";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import departmentRoutes from "./routes/department.routes.js";
+import inventoryRoutes from "./routes/inventory.routes.js";
 
 dotenv.config(); // Load environment variables from .env file
 const app = express();
@@ -31,6 +32,7 @@ app.use(morgan("dev")); // Logging middleware
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/departments", departmentRoutes);
+app.use("/inventory", inventoryRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

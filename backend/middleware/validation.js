@@ -117,3 +117,107 @@ export const departmentIdValidation = [
         .withMessage('Department ID must be a valid integer'),
     validate
 ];
+
+// Inventory validation
+export const inventoryValidation = [
+    body('name')
+        .trim()
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Item name must be between 2 and 100 characters long')
+        .matches(/^[a-zA-Z0-9\s\-_]+$/)
+        .withMessage('Item name can only contain letters, numbers, spaces, hyphens, and underscores'),
+    body('description')
+        .optional()
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage('Description must not exceed 500 characters'),
+    body('category')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Category must not exceed 100 characters'),
+    body('quantity')
+        .isInt({ min: 0 })
+        .withMessage('Quantity must be a non-negative integer'),
+    body('unit')
+        .trim()
+        .isLength({ min: 1, max: 20 })
+        .withMessage('Unit must be between 1 and 20 characters'),
+    body('condition')
+        .optional()
+        .isIn(['new', 'used', 'damaged', 'maintenance'])
+        .withMessage('Condition must be one of: new, used, damaged, maintenance'),
+    body('status')
+        .optional()
+        .isIn(['available', 'unavailable', 'reserved', 'maintenance'])
+        .withMessage('Status must be one of: available, unavailable, reserved, maintenance'),
+    body('expiration_date')
+        .optional({ nullable: true })
+        .custom((value) => {
+            if (value === null || value === '') return true;
+            return /^\d{4}-\d{2}-\d{2}$/.test(value);
+        })
+        .withMessage('Expiration date must be null or a valid date in YYYY-MM-DD format'),
+    body('department_id')
+        .isInt()
+        .withMessage('Department ID must be a valid integer'),
+    validate
+];
+
+// Inventory update validation
+export const inventoryUpdateValidation = [
+    body('name')
+        .optional()
+        .trim()
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Item name must be between 2 and 100 characters long')
+        .matches(/^[a-zA-Z0-9\s\-_]+$/)
+        .withMessage('Item name can only contain letters, numbers, spaces, hyphens, and underscores'),
+    body('description')
+        .optional()
+        .trim()
+        .isLength({ max: 500 })
+        .withMessage('Description must not exceed 500 characters'),
+    body('category')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Category must not exceed 100 characters'),
+    body('quantity')
+        .optional()
+        .isInt({ min: 0 })
+        .withMessage('Quantity must be a non-negative integer'),
+    body('unit')
+        .optional()
+        .trim()
+        .isLength({ min: 1, max: 20 })
+        .withMessage('Unit must be between 1 and 20 characters'),
+    body('condition')
+        .optional()
+        .isIn(['new', 'used', 'damaged', 'maintenance'])
+        .withMessage('Condition must be one of: new, used, damaged, maintenance'),
+    body('status')
+        .optional()
+        .isIn(['available', 'unavailable', 'reserved', 'maintenance'])
+        .withMessage('Status must be one of: available, unavailable, reserved, maintenance'),
+    body('expiration_date')
+        .optional({ nullable: true })
+        .custom((value) => {
+            if (value === null || value === '') return true;
+            return /^\d{4}-\d{2}-\d{2}$/.test(value);
+        })
+        .withMessage('Expiration date must be null or a valid date in YYYY-MM-DD format'),
+    body('department_id')
+        .optional()
+        .isInt()
+        .withMessage('Department ID must be a valid integer'),
+    validate
+];
+
+// Inventory ID parameter validation
+export const inventoryIdValidation = [
+    param('id')
+        .isInt()
+        .withMessage('Inventory item ID must be a valid integer'),
+    validate
+];
