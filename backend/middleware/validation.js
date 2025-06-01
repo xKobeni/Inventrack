@@ -221,3 +221,84 @@ export const inventoryIdValidation = [
         .withMessage('Inventory item ID must be a valid integer'),
     validate
 ];
+
+// Procurement validation
+export const procurementValidation = [
+    body('department_id')
+        .isInt()
+        .withMessage('Department ID must be a valid integer'),
+    body('justification')
+        .trim()
+        .isLength({ min: 10, max: 1000 })
+        .withMessage('Justification must be between 10 and 1000 characters'),
+    body('priority')
+        .optional()
+        .isIn(['high', 'medium', 'low'])
+        .withMessage('Priority must be one of: high, medium, low'),
+    body('required_by_date')
+        .optional()
+        .isISO8601()
+        .withMessage('Required by date must be a valid date'),
+    body('category')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Category must not exceed 100 characters'),
+    body('subcategory')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Subcategory must not exceed 100 characters'),
+    body('items')
+        .isArray()
+        .withMessage('Items must be an array')
+        .notEmpty()
+        .withMessage('Items array cannot be empty'),
+    body('items.*.item_id')
+        .isInt()
+        .withMessage('Item ID must be a valid integer'),
+    body('items.*.quantity')
+        .isInt({ min: 1 })
+        .withMessage('Quantity must be a positive integer'),
+    validate
+];
+
+// Procurement update validation
+export const procurementUpdateValidation = [
+    body('status')
+        .optional()
+        .isIn(['pending', 'approved', 'denied'])
+        .withMessage('Status must be one of: pending, approved, denied'),
+    body('justification')
+        .optional()
+        .trim()
+        .isLength({ min: 10, max: 1000 })
+        .withMessage('Justification must be between 10 and 1000 characters'),
+    body('priority')
+        .optional()
+        .isIn(['high', 'medium', 'low'])
+        .withMessage('Priority must be one of: high, medium, low'),
+    body('required_by_date')
+        .optional()
+        .isISO8601()
+        .withMessage('Required by date must be a valid date'),
+    body('category')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Category must not exceed 100 characters'),
+    body('subcategory')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Subcategory must not exceed 100 characters'),
+    validate
+];
+
+// Procurement ID parameter validation
+export const procurementIdValidation = [
+    param('id')
+        .isInt()
+        .withMessage('Procurement request ID must be a valid integer'),
+    validate
+];

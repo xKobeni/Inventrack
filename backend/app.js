@@ -8,6 +8,7 @@ import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import departmentRoutes from "./routes/department.routes.js";
 import inventoryRoutes from "./routes/inventory.routes.js";
+import procurementRoutes from "./routes/procurement.routes.js";
 
 dotenv.config(); // Load environment variables from .env file
 const app = express();
@@ -33,6 +34,7 @@ app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/departments", departmentRoutes);
 app.use("/inventory", inventoryRoutes);
+app.use("/procurement", procurementRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

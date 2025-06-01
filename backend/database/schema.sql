@@ -47,6 +47,10 @@ CREATE TABLE IF NOT EXISTS procurement_requests (
     department_id INTEGER REFERENCES departments(department_id),
     status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'denied')),
     justification TEXT,
+    priority VARCHAR(20) DEFAULT 'medium' CHECK (priority IN ('high', 'medium', 'low')),
+    required_by_date DATE,
+    category VARCHAR(100),
+    subcategory VARCHAR(100),
     requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reviewed_by INTEGER REFERENCES users(user_id),
     reviewed_at TIMESTAMP
