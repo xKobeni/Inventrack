@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { getUserByEmail } from '../models/user.models.js';
+import { getUserByEmail } from '../models/userModels/user.models.js';
 import { isBlacklisted } from '../utils/tokenBlacklist.js';
 
 

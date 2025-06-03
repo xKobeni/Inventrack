@@ -81,7 +81,7 @@ export const adminUpdateUserValidation = [
 
 // User ID parameter validation
 export const userIdValidation = [
-    param('id')
+    param('userId')
         .isInt()
         .withMessage('User ID must be a valid integer'),
     validate
@@ -300,5 +300,104 @@ export const procurementIdValidation = [
     param('id')
         .isInt()
         .withMessage('Procurement request ID must be a valid integer'),
+    validate
+];
+
+// Incident Report validation
+export const incidentReportValidation = [
+    body('item_id')
+        .optional()
+        .isInt()
+        .withMessage('Item ID must be a valid integer'),
+    body('custom_item')
+        .optional()
+        .trim()
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Custom item name must be between 2 and 100 characters'),
+    body('type')
+        .isIn(['damage', 'loss', 'maintenance'])
+        .withMessage('Type must be one of: damage, loss, maintenance'),
+    body('description')
+        .trim()
+        .isLength({ min: 10, max: 1000 })
+        .withMessage('Description must be between 10 and 1000 characters'),
+    body()
+        .custom((value, { req }) => {
+            if (!req.body.item_id && !req.body.custom_item) {
+                throw new Error('Either item_id or custom_item must be provided');
+            }
+            return true;
+        }),
+    validate
+];
+
+// Incident Report update validation
+export const incidentReportUpdateValidation = [
+    body('status')
+        .isIn(['open', 'resolved'])
+        .withMessage('Status must be either open or resolved'),
+    validate
+];
+
+// Incident Report ID parameter validation
+export const incidentReportIdValidation = [
+    param('id')
+        .isInt()
+        .withMessage('Report ID must be a valid integer'),
+    validate
+];
+
+// Item ID parameter validation
+export const itemIdValidation = [
+    param('itemId')
+        .isInt()
+        .withMessage('Item ID must be a valid integer'),
+    validate
+];
+
+// Bulk user operations validation
+export const bulkUserValidation = [
+    body('userIds')
+        .isArray()
+        .withMessage('userIds must be an array')
+        .notEmpty()
+        .withMessage('userIds array cannot be empty'),
+    body('userIds.*')
+        .isInt()
+        .withMessage('Each userId must be an integer'),
+    validate
+];
+
+// Bulk update validation
+export const bulkUpdateValidation = [
+    body('userIds')
+        .isArray()
+        .withMessage('userIds must be an array')
+        .notEmpty()
+        .withMessage('userIds array cannot be empty'),
+    body('userIds.*')
+        .isInt()
+        .withMessage('Each userId must be an integer'),
+    body('updateData')
+        .isObject()
+        .withMessage('updateData must be an object'),
+    body('updateData.name')
+        .optional()
+        .isString()
+        .trim()
+        .isLength({ min: 2 })
+        .withMessage('Name must be at least 2 characters long'),
+    body('updateData.email')
+        .optional()
+        .isEmail()
+        .withMessage('Please enter a valid email'),
+    body('updateData.role')
+        .optional()
+        .isIn(['admin', 'gso_staff', 'department_rep'])
+        .withMessage('Invalid role'),
+    body('updateData.is_active')
+        .optional()
+        .isBoolean()
+        .withMessage('is_active must be a boolean'),
     validate
 ];

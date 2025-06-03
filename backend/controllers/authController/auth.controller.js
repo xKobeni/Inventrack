@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
-import { generateToken } from '../utils/jwt.js';
-import { getUserByEmail, createUser } from '../models/user.models.js';
-import { addToBlacklist } from '../utils/tokenBlacklist.js';
+import { generateToken } from '../../utils/jwt.js';
+import { getUserByEmail, createUser } from '../../models/userModels/user.models.js';
+import { addToBlacklist } from '../../utils/tokenBlacklist.js';
 
 const login = async (req, res) => {
     const { email, password } = req.body;

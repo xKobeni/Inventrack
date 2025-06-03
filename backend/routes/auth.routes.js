@@ -1,15 +1,20 @@
 import { Router } from "express";
-import { login, registerUser, logout } from "../controllers/auth.controller.js";
+import { login, registerUser, logout } from "../controllers/authController/auth.controller.js";
+import { requestPasswordReset, resetPassword } from "../controllers/authController/passwordReset.controller.js";
 import { registerValidation, loginValidation } from "../middleware/validation.js";
+import { authLimiter, passwordResetLimiter } from "../middleware/rateLimit.middleware.js";
+import { authMiddleware } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
-// Route for user login
-router.post("/login", loginValidation, login);
-// Route for user registration
+// Authentication routes
+router.post("/login", authLimiter, loginValidation, login);
 router.post("/register", registerValidation, registerUser);
-// Route for user logout
-router.post("/logout", logout);
+router.post("/logout", authMiddleware, logout);
+
+// Password reset routes
+router.post("/password/reset-request", passwordResetLimiter, requestPasswordReset);
+router.post("/password/reset", passwordResetLimiter, resetPassword);
 
 export default router;
 
