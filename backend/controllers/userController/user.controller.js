@@ -1,11 +1,10 @@
-import { getUserByEmail, updateUser, deleteUser, activateUser, deactivateUser, getUserById, getAllUsers } from '../models/user.models.js';
+import { getUserByEmail, updateUser, deleteUser, activateUser, deactivateUser, getUserById, getAllUsers } from '../../models/userModels/user.models.js';
 import bcrypt from 'bcrypt';
 
 // Get all users (admin only)
 export const fetchAllUsers = async (req, res) => {
     try {
         // Check if user is admin 
-        // eto din kaya hindi nagana ang token, hindi nababasa si user
         if (req.user.role !== 'admin') {
             return res.status(403).json({
                 success: false,
@@ -13,7 +12,28 @@ export const fetchAllUsers = async (req, res) => {
             });
         }
 
-        const users = await getAllUsers();
+        // Get query parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const search = req.query.search || '';
+        const role = req.query.role;
+        const isActive = req.query.is_active;
+        const sortBy = req.query.sort_by || 'created_at';
+        const sortOrder = req.query.sort_order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+
+        // Calculate offset
+        const offset = (page - 1) * limit;
+
+        // Get users with pagination and filters
+        const { users, total } = await getAllUsers({
+            limit,
+            offset,
+            search,
+            role,
+            isActive,
+            sortBy,
+            sortOrder
+        });
         
         // Remove sensitive information from response
         const sanitizedUsers = users.map(user => ({
@@ -21,14 +41,21 @@ export const fetchAllUsers = async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
-            is_active: user.is_active
+            is_active: user.is_active,
+            created_at: user.created_at
         }));
 
         res.status(200).json({
             success: true,
             message: 'Users retrieved successfully',
             data: {
-                users: sanitizedUsers
+                users: sanitizedUsers,
+                pagination: {
+                    current_page: page,
+                    total_pages: Math.ceil(total / limit),
+                    total_items: total,
+                    items_per_page: limit
+                }
             }
         });
     } catch (error) {

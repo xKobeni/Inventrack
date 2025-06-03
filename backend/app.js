@@ -5,10 +5,13 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
 import authRoutes from "./routes/auth.routes.js";
-import userRoutes from "./routes/user.routes.js";
+import userRoutes from "./routes/userRoutes/user.routes.js";
 import departmentRoutes from "./routes/department.routes.js";
 import inventoryRoutes from "./routes/inventory.routes.js";
 import procurementRoutes from "./routes/procurement.routes.js";
+import incidentReportsRoutes from "./routes/incidentReports.routes.js";
+import userPreferencesRoutes from './routes/userRoutes/userPreferences.routes.js';
+import sessionRoutes from './routes/session.routes.js';
 
 dotenv.config(); // Load environment variables from .env file
 const app = express();
@@ -35,6 +38,9 @@ app.use("/users", userRoutes);
 app.use("/departments", departmentRoutes);
 app.use("/inventory", inventoryRoutes);
 app.use("/procurement", procurementRoutes);
+app.use("/incident-reports", incidentReportsRoutes);
+app.use('/api/preferences', userPreferencesRoutes);
+app.use('/api/sessions', sessionRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

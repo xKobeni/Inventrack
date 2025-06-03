@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS incident_reports (
     report_id SERIAL PRIMARY KEY,
     reported_by INTEGER REFERENCES users(user_id),
     item_id INTEGER REFERENCES inventory_items(item_id),
+    custom_item VARCHAR(100),
     type VARCHAR(50) NOT NULL CHECK (type IN ('damage', 'loss', 'maintenance')),
     description TEXT,
     status VARCHAR(50) DEFAULT 'open' CHECK (status IN ('open', 'resolved')),
@@ -86,8 +87,40 @@ CREATE TABLE IF NOT EXISTS notifications (
 CREATE TABLE IF NOT EXISTS audit_logs (
     log_id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(user_id),
-    action TEXT,
-    target_table VARCHAR(50),
+    action VARCHAR(100) NOT NULL,
+    details JSONB,
+    target_table VARCHAR(100),
     target_id INTEGER,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    token_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(user_id),
+    token VARCHAR(255) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    used_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_preferences (
+    preference_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(user_id),
+    notification_settings JSONB DEFAULT '{"email": true, "push": true}',
+    language VARCHAR(10) DEFAULT 'en',
+    theme VARCHAR(20) DEFAULT 'light',
+    timezone VARCHAR(50) DEFAULT 'UTC',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_sessions (
+    session_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(user_id),
+    token VARCHAR(255) NOT NULL,
+    device_info JSONB,
+    ip_address VARCHAR(45),
+    last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL
 );
