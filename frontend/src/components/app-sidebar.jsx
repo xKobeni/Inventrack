@@ -1,20 +1,16 @@
 import * as React from "react"
 import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
   FileStack,
-  Frame,
   GalleryVerticalEnd,
   Layers,
   LayoutDashboard,
-  Map,
-  PieChart,
   Settings2,
-  SquareTerminal,
   Users,
+  UserCircle,
+  LogOut,
 } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import useAuthStore from "../store/useAuthStore"
 
 import { NavMain } from "@/components/nav-main"
 import { NavProjects } from "@/components/nav-projects"
@@ -28,173 +24,213 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-// This is sample data.
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  teams: [
+export function AppSidebar({
+  ...props
+}) {
+  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  // Navigation items based on user role
+  const getNavigationItems = () => {
+    const commonItems = [
+      {
+        title: "Dashboard",
+        url: "/dashboard",
+        icon: LayoutDashboard,
+        isActive: true,
+        items: [],
+      },
+      {
+        title: "Profile",
+        url: "/profile",
+        icon: UserCircle,
+        items: [],
+      },
+    ];
+
+    // Admin specific items
+    if (user?.role === 'admin') {
+      return [
+        ...commonItems,
+        {
+          title: "User Management",
+          url: "/admin/users",
+          icon: Users,
+          items: [
+            {
+              title: "All Users",
+              url: "/admin/users",
+            },
+            {
+              title: "Add User",
+              url: "/admin/users/add",
+            },
+          ],
+        },
+        {
+          title: "Inventory Management",
+          url: "/inventory",
+          icon: Layers,
+          items: [
+            {
+              title: "Items",
+              url: "/inventory/items",
+            },
+            {
+              title: "Categories",
+              url: "/inventory/categories",
+            },
+            {
+              title: "Stock",
+              url: "/inventory/stock",
+            },
+          ],
+        },
+        {
+          title: "Procurement",
+          url: "/procurement",
+          icon: FileStack,
+          items: [
+            {
+              title: "Requests",
+              url: "/procurement/requests",
+            },
+            {
+              title: "Orders",
+              url: "/procurement/orders",
+            },
+            {
+              title: "Suppliers",
+              url: "/procurement/suppliers",
+            },
+          ],
+        },
+        {
+          title: "Settings",
+          url: "/settings",
+          icon: Settings2,
+          items: [
+            {
+              title: "General",
+              url: "/settings/general",
+            },
+            {
+              title: "Team",
+              url: "/settings/team",
+            },
+          ],
+        },
+      ];
+    }
+
+    // Department Rep specific items
+    if (user?.role === 'department_rep') {
+      return [
+        ...commonItems,
+        {
+          title: "Inventory",
+          url: "/inventory",
+          icon: Layers,
+          items: [
+            {
+              title: "View Items",
+              url: "/inventory/items",
+            },
+            {
+              title: "Request Items",
+              url: "/inventory/request",
+            },
+          ],
+        },
+        {
+          title: "Procurement",
+          url: "/procurement",
+          icon: FileStack,
+          items: [
+            {
+              title: "My Requests",
+              url: "/procurement/my-requests",
+            },
+            {
+              title: "New Request",
+              url: "/procurement/new-request",
+            },
+          ],
+        },
+      ];
+    }
+
+    // GSO Staff specific items
+    if (user?.role === 'gso_staff') {
+      return [
+        ...commonItems,
+        {
+          title: "Inventory",
+          url: "/inventory",
+          icon: Layers,
+          items: [
+            {
+              title: "Manage Items",
+              url: "/inventory/manage",
+            },
+            {
+              title: "Stock Control",
+              url: "/inventory/stock",
+            },
+          ],
+        },
+        {
+          title: "Procurement",
+          url: "/procurement",
+          icon: FileStack,
+          items: [
+            {
+              title: "Process Requests",
+              url: "/procurement/process",
+            },
+            {
+              title: "Manage Orders",
+              url: "/procurement/orders",
+            },
+          ],
+        },
+      ];
+    }
+
+    // Default items for other roles
+    return commonItems;
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  const userData = {
+    name: user?.name || 'User',
+    email: user?.email || '',
+    avatar: user?.avatar || '',
+    role: user?.role || 'user',
+  };
+
+  const teams = [
     {
       name: "InvenTrack",
       logo: GalleryVerticalEnd,
       plan: "Web App",
     },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: LayoutDashboard,
-      isActive: true,
-      items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "User Management",
-      url: "#",
-      icon: Users,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Inventory Management",
-      url: "#",
-      icon: Layers,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Procurement Requests",
-      url: "#",
-      icon: FileStack,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
-  ],
-}
+  ];
 
-export function AppSidebar({
-  ...props
-}) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TeamSwitcher teams={teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        <NavMain items={getNavigationItems()} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={userData} onLogout={handleLogout} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

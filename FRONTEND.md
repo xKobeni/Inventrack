@@ -22,6 +22,8 @@ The Inventrack frontend is built using React with Vite as the build tool. It use
 - **ESLint** (v9.25.0) - Code linting
 - **PostCSS** (v8.5.3) - CSS processing
 - **Autoprefixer** (v10.4.21) - CSS vendor prefixing
+- **Jest** - Testing framework
+- **React Testing Library** - Component testing
 
 ## Project Structure
 ```
@@ -35,6 +37,9 @@ frontend/
 │   ├── store/        # Zustand store
 │   ├── utils/        # Utility functions
 │   ├── api/          # API integration
+│   ├── context/      # React context providers
+│   ├── lib/          # Library configurations
+│   ├── tests/        # Test files
 │   └── App.jsx       # Root component
 ├── public/           # Static assets
 ├── node_modules/     # Dependencies
@@ -42,7 +47,10 @@ frontend/
 ├── vite.config.js    # Vite configuration
 ├── tailwind.config.js # Tailwind CSS configuration
 ├── postcss.config.js # PostCSS configuration
-└── package.json      # Project dependencies and scripts
+├── components.json   # Component configuration
+├── jsconfig.json    # JavaScript configuration
+├── eslint.config.js # ESLint configuration
+└── package.json     # Project dependencies and scripts
 ```
 
 ## UI Components
@@ -55,10 +63,14 @@ The project includes several reusable base components located in `src/components
 - **Input** (`input.jsx`) - Form input component
 - **Label** (`label.jsx`) - Form label component
 - **Checkbox** (`checkbox.jsx`) - Checkbox input component
+- **Table** (`table.jsx`) - Data table component
+- **Modal** (`modal.jsx`) - Modal dialog component
+- **Dropdown** (`dropdown.jsx`) - Dropdown menu component
 
 ### Authentication Components
 - **LoginForm** - Login form component
 - **AuthLayout** - Authentication page layout
+- **ProtectedRoute** - Route protection component
 
 ## Getting Started
 
@@ -91,6 +103,12 @@ npm run build
 ```
 The build output will be in the `dist` directory.
 
+### Testing
+To run tests:
+```bash
+npm run test
+```
+
 ### Linting
 To run ESLint:
 ```bash
@@ -106,6 +124,11 @@ npm run lint
 - API integration with Axios
 - Reusable UI components
 - Authentication system
+- Form validation
+- Error boundary implementation
+- Loading states and skeletons
+- Responsive layouts
+- Dark mode support
 
 ## Best Practices
 1. Use functional components with hooks
@@ -116,12 +139,19 @@ npm run lint
 6. Implement responsive design using Tailwind CSS
 7. Maintain consistent component structure
 8. Use proper semantic HTML elements
+9. Write unit tests for components
+10. Implement proper loading states
+11. Use React Context for global state
+12. Follow accessibility guidelines
 
 ## Available Scripts
 - `npm run dev` - Start development server
 - `npm run build` - Create production build
 - `npm run lint` - Run ESLint
 - `npm run preview` - Preview production build locally
+- `npm run test` - Run tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Generate test coverage report
 
 ## Dependencies
 ### Production Dependencies
@@ -132,6 +162,9 @@ npm run lint
 - axios: ^1.9.0
 - react-hot-toast: ^2.5.2
 - lucide-react: ^0.344.0
+- @hookform/resolvers: ^3.3.4
+- react-hook-form: ^7.50.0
+- zod: ^3.22.4
 
 ### Development Dependencies
 - @vitejs/plugin-react: ^4.4.1
@@ -140,6 +173,9 @@ npm run lint
 - eslint: ^9.25.0
 - postcss: ^8.5.3
 - autoprefixer: ^10.4.21
+- jest: ^29.7.0
+- @testing-library/react: ^14.1.2
+- @testing-library/jest-dom: ^6.4.2
 
 ## Contributing
 1. Follow the existing code style
@@ -147,6 +183,9 @@ npm run lint
 3. Test your changes thoroughly
 4. Update documentation as needed
 5. Create pull requests for new features
+6. Add tests for new components
+7. Ensure responsive design
+8. Follow accessibility guidelines
 
 ## Troubleshooting
 Common issues and their solutions:
@@ -157,4 +196,6 @@ Common issues and their solutions:
    ```
 2. For build errors, check the Vite configuration
 3. For styling issues, verify Tailwind CSS configuration
-4. For component issues, check the component documentation 
+4. For component issues, check the component documentation
+5. For test failures, check the test configuration
+6. For TypeScript errors, verify type definitions 
