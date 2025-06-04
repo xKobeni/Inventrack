@@ -16,6 +16,10 @@ Inventrack is a modern inventory management system built with Node.js, Express, 
 - 📱 Mobile-friendly design
 - 🎯 Reusable UI components
 - 🔑 Role-based access control
+- 📝 Form validation with Zod
+- 🧪 Comprehensive testing suite
+- 🌙 Dark mode support
+- ♿ Accessibility features
 
 ## Tech Stack
 
@@ -30,6 +34,7 @@ Inventrack is a modern inventory management system built with Node.js, Express, 
 - Morgan for logging
 - Express Rate Limit for API protection
 - Express Validator for input validation
+- Jest for testing
 
 ### Frontend
 - React 19.1.0
@@ -43,6 +48,9 @@ Inventrack is a modern inventory management system built with Node.js, Express, 
 - Lucide React for icons
 - ESLint for code quality
 - PostCSS for CSS processing
+- Jest and React Testing Library for testing
+- React Hook Form for form handling
+- Zod for schema validation
 
 ## Prerequisites
 
@@ -100,11 +108,27 @@ npm run dev
 ```
 The frontend will be available at http://localhost:5173
 
+## Testing
+
+### Backend Tests
+Run backend tests:
+```bash
+npm run test
+```
+
+### Frontend Tests
+Run frontend tests:
+```bash
+cd frontend
+npm run test
+```
+
 ## Documentation
 
 - [API Documentation](./API.md) - Detailed API endpoints and usage
 - [Postman Documentation](./POSTMAN.md) - API testing and Postman collection guide
-- [Frontend Documentation](./frontend.md) - Frontend architecture and setup
+- [Frontend Documentation](./FRONTEND.md) - Frontend architecture and setup
+- [Backend Documentation](./BACKEND.md) - Backend architecture and setup
 - [Libraries Documentation](./LIBRARIES.md) - Detailed library information
 
 ## Project Structure
@@ -118,7 +142,9 @@ inventrack/
 │   ├── middleware/     # Custom middleware
 │   ├── models/         # Database models
 │   ├── routes/         # API routes
+│   ├── services/       # Business logic
 │   ├── utils/          # Utility functions
+│   ├── tests/          # Test files
 │   ├── app.js          # Express app setup
 │   └── server.js       # Server entry point
 ├── frontend/
@@ -131,6 +157,9 @@ inventrack/
 │   │   ├── store/     # Zustand store
 │   │   ├── utils/     # Utility functions
 │   │   ├── api/       # API integration
+│   │   ├── context/   # React context
+│   │   ├── lib/       # Library configs
+│   │   ├── tests/     # Test files
 │   │   └── App.jsx    # Root component
 │   ├── public/        # Static assets
 │   ├── index.html     # Entry HTML file
@@ -153,6 +182,9 @@ inventrack/
 - `npm run build` - Create production build
 - `npm run lint` - Run ESLint
 - `npm run preview` - Preview production build
+- `npm run test` - Run tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Generate test coverage
 
 ## Contributing
 

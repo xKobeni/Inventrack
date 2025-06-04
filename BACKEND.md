@@ -6,7 +6,7 @@ The Inventrack backend is a Node.js/Express.js application that provides a RESTf
 ## Tech Stack
 - Node.js
 - Express.js
-- MongoDB (implied from the model structure)
+- PostgreSQL (with Neon Serverless)
 - JWT Authentication
 - Various security middleware (helmet, cors, rate limiting)
 
@@ -16,7 +16,8 @@ backend/
 ├── app.js              # Main application setup
 ├── server.js           # Server entry point
 ├── routes/             # API route definitions
-├── controllers/        # Business logic
+├── controllers/        # Request handlers
+├── services/          # Business logic layer
 ├── models/            # Database models
 ├── middleware/        # Custom middleware
 ├── utils/            # Utility functions
@@ -29,6 +30,7 @@ backend/
 ### Authentication (`/auth`)
 - POST `/auth/login` - User login
 - POST `/auth/register` - User registration
+- POST `/auth/logout` - User logout
 
 ### Users (`/users`)
 - GET `/users` - Get all users
@@ -62,18 +64,22 @@ backend/
 1. Rate Limiting
    - 100 requests per 15 minutes per IP
    - Prevents brute force attacks
+   - Configurable limits per endpoint
 
 2. Security Headers (Helmet)
    - Sets various HTTP headers for security
    - Protects against common web vulnerabilities
+   - Content Security Policy (CSP) enabled
 
 3. CORS Protection
    - Cross-Origin Resource Sharing configuration
    - Controls which domains can access the API
+   - Configurable allowed origins
 
 4. Request Logging (Morgan)
    - Development logging for debugging
    - Request/response monitoring
+   - Custom log format
 
 ## Error Handling
 The application implements a global error handling middleware that:
@@ -81,11 +87,14 @@ The application implements a global error handling middleware that:
 - Returns appropriate HTTP status codes
 - Provides structured error responses
 - Handles 404 (Not Found) errors
+- Custom error classes for different error types
 
 ## Environment Variables
 Required environment variables:
 - `PORT` - Server port (defaults to 5001)
-- Additional variables for database connection and JWT secrets
+- `DATABASE_URL` - PostgreSQL connection string
+- `JWT_SECRET` - Secret for JWT token generation
+- `NODE_ENV` - Environment (development/production)
 
 ## Getting Started
 1. Install dependencies:
@@ -106,9 +115,12 @@ Required environment variables:
 1. All routes are protected by rate limiting
 2. JSON parsing middleware for request bodies
 3. Proper error handling and logging
-4. Modular architecture with separate routes, controllers, and models
+4. Modular architecture with separate routes, controllers, services, and models
 5. Security headers and CORS protection
 6. Structured API responses
+7. Input validation using express-validator
+8. Database connection pooling
+9. Transaction support for critical operations
 
 ## API Response Format
 All API responses follow a consistent format:

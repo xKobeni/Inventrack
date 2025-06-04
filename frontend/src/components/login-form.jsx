@@ -5,17 +5,28 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import useAuthStore from "../store/useAuthStore.js"
 import { useToast } from "../hooks/use-toast.js"
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useNavigate, useLocation } from "react-router-dom"
 
 export function LoginForm({
   className,
   ...props
 }) {
-  const { login } = useAuthStore()
+  const { login, user, token, isAuthenticated } = useAuthStore()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Debug: Check auth state on component mount
+  useEffect(() => {
+    console.log('Current auth state:', {
+      user,
+      token,
+      isAuthenticated,
+      localStorage: localStorage.getItem('auth-storage')
+    });
+  }, [user, token, isAuthenticated]);
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -28,24 +39,24 @@ export function LoginForm({
       setIsLoading(true)
       const response = await login({ email, password })
       
+      // Debug: Log stored information after login
+      console.log('After login - Auth state:', {
+        user: response.user,
+        token: response.token,
+        localStorage: localStorage.getItem('auth-storage')
+      });
+      
       toast({
         title: "Success!",
         description: "You have been logged in successfully.",
         variant: "success",
       })
 
-      // Redirect based on user role
-      switch (response.user.role) {
-        case 'admin':
-          navigate('/dashboard')
-          break
-        case 'user':
-          navigate('/user-dashboard')
-          break
-        default:
-          navigate('/')
-      }
+      // Redirect to the attempted URL or dashboard
+      const from = location.state?.from?.pathname || '/dashboard'
+      navigate(from, { replace: true })
     } catch (error) {
+      console.error('Login error details:', error);
       toast({
         title: "Login Failed",
         description: error.message || "Invalid email or password. Please try again.",
@@ -82,7 +93,7 @@ export function LoginForm({
             >
               Remember me
             </label>
-            <a href="#" className="ml-auto text-sm underline-offset-4 hover:underline">
+            <a href="/forgot-password" className="ml-auto text-sm underline-offset-4 hover:underline">
               Forgot your password?
             </a>
           </div>
