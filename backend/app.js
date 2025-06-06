@@ -16,11 +16,27 @@ import sessionRoutes from './routes/session.routes.js';
 dotenv.config(); // Load environment variables from .env file
 const app = express();
 
+// Trust proxy to get real IP address
+app.set('trust proxy', true);
+
+// IP address middleware
+app.use((req, res, next) => {
+    // Get IP from various headers in order of preference
+    const ip = req.headers['x-forwarded-for']?.split(',')[0] || 
+               req.headers['x-real-ip'] || 
+               req.connection.remoteAddress;
+    
+    // Store IP in request object
+    req.realIP = ip;
+    next();
+});
+
 // Rate limiting configuration
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // Limit each IP to 100 requests per windowMs
-    message: "Too many requests from this IP, please try again later."
+    message: "Too many requests from this IP, please try again later.",
+    keyGenerator: (req) => req.realIP // Use real IP for rate limiting
 });
 
 // Apply rate limiting to all routes

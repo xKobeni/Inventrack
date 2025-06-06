@@ -1,5 +1,10 @@
 import rateLimit from 'express-rate-limit';
 
+// Helper function to check if user is authenticated
+const isAuthenticated = (req) => {
+  return req.user && req.user.id;
+};
+
 // General API rate limiter
 export const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -7,7 +12,8 @@ export const apiLimiter = rateLimit({
     message: {
         success: false,
         message: 'Too many requests from this IP, please try again after 15 minutes'
-    }
+    },
+    skip: (req) => isAuthenticated(req) // Skip rate limiting for authenticated users
 });
 
 // Stricter limiter for authentication routes
@@ -17,7 +23,8 @@ export const authLimiter = rateLimit({
     message: {
         success: false,
         message: 'Too many login attempts, please try again after an hour'
-    }
+    },
+    // Don't skip for auth routes as these are for unauthenticated users
 });
 
 // Limiter for password reset requests
@@ -27,5 +34,6 @@ export const passwordResetLimiter = rateLimit({
     message: {
         success: false,
         message: 'Too many password reset attempts, please try again after an hour'
-    }
+    },
+    // Don't skip for password reset as these are for unauthenticated users
 }); 

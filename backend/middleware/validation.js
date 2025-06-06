@@ -15,16 +15,19 @@ export const validate = (req, res, next) => {
 
 // User registration validation
 export const registerValidation = [
-    body('username')
+    body('name')
         .trim()
         .isLength({ min: 3 })
-        .withMessage('Username must be at least 3 characters long'),
+        .withMessage('Name must be at least 3 characters long'),
     body('email')
         .isEmail()
         .withMessage('Please enter a valid email'),
     body('password')
         .isLength({ min: 6 })
         .withMessage('Password must be at least 6 characters long'),
+    body('role')
+        .isIn(['admin', 'department_rep', 'gso_staff'])
+        .withMessage('Role must be one of: admin, department_rep, gso_staff'),
     validate
 ];
 
@@ -81,7 +84,7 @@ export const adminUpdateUserValidation = [
 
 // User ID parameter validation
 export const userIdValidation = [
-    param('userId')
+    param('id')
         .isInt()
         .withMessage('User ID must be a valid integer'),
     validate

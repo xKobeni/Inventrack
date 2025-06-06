@@ -4,6 +4,8 @@ import ForgotPassword from "./pages/Auth/forgotPasswordPage"
 import ResetPassword from "./pages/Auth/resetPasswordPage"
 import Dashboard from "./pages/Admin/dashboard"
 import ProfilePage from "./pages/Shared/profilePage"
+import UserManagement from "./pages/Admin/userManagement"
+import AddUser from "./pages/Admin/addUser"
 import Error403 from "./pages/Shared/403Error"
 import Error404 from "./pages/Shared/404Error"
 import Error500 from "./pages/Shared/500Error"
@@ -80,6 +82,22 @@ function App() {
           element={
             <ProtectedRoute>
               <SecurityTests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute>
+              <UserManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users/add"
+          element={
+            <ProtectedRoute>
+              <AddUser />
             </ProtectedRoute>
           }
         />
