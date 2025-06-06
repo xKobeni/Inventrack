@@ -4,8 +4,16 @@ const createSession = async (userId, token, deviceInfo, ipAddress) => {
     const expiresAt = new Date(Date.now() + 24 * 3600000); // 24 hours from now
 
     const query = `
-        INSERT INTO user_sessions (user_id, token, device_info, ip_address, expires_at)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO user_sessions (
+            user_id, 
+            token, 
+            device_info, 
+            ip_address, 
+            expires_at,
+            created_at,
+            last_activity
+        )
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
         RETURNING *
     `;
     const values = [userId, token, deviceInfo, ipAddress, expiresAt];
@@ -15,8 +23,16 @@ const createSession = async (userId, token, deviceInfo, ipAddress) => {
 
 const getSession = async (token) => {
     const query = `
-        SELECT * FROM user_sessions
-        WHERE token = $1 AND expires_at > NOW()
+        SELECT 
+            s.*,
+            u.email,
+            u.name,
+            u.role
+        FROM user_sessions s
+        JOIN users u ON s.user_id = u.user_id
+        WHERE s.token = $1 
+        AND s.expires_at > NOW()
+        AND u.is_active = true
     `;
     const values = [token];
     const { rows } = await pool.query(query, values);
@@ -28,6 +44,7 @@ const updateSessionActivity = async (sessionId) => {
         UPDATE user_sessions
         SET last_activity = NOW()
         WHERE session_id = $1
+        AND expires_at > NOW()
         RETURNING *
     `;
     const values = [sessionId];
@@ -35,13 +52,13 @@ const updateSessionActivity = async (sessionId) => {
     return rows[0];
 };
 
-const deleteSession = async (sessionId) => {
+const deleteSession = async (token) => {
     const query = `
         DELETE FROM user_sessions
-        WHERE session_id = $1
+        WHERE token = $1
         RETURNING *
     `;
-    const values = [sessionId];
+    const values = [token];
     const { rows } = await pool.query(query, values);
     return rows[0];
 };
@@ -59,13 +76,46 @@ const deleteAllUserSessions = async (userId) => {
 
 const getActiveSessions = async (userId) => {
     const query = `
-        SELECT * FROM user_sessions
-        WHERE user_id = $1 AND expires_at > NOW()
-        ORDER BY last_activity DESC
+        SELECT 
+            s.*,
+            u.email,
+            u.name,
+            u.role
+        FROM user_sessions s
+        JOIN users u ON s.user_id = u.user_id
+        WHERE s.user_id = $1 
+        AND s.expires_at > NOW()
+        AND u.is_active = true
+        ORDER BY s.last_activity DESC
     `;
     const values = [userId];
     const { rows } = await pool.query(query, values);
     return rows;
+};
+
+const cleanupExpiredSessions = async () => {
+    const query = `
+        DELETE FROM user_sessions
+        WHERE expires_at < NOW()
+        RETURNING *
+    `;
+    const { rows } = await pool.query(query);
+    return rows;
+};
+
+const getSessionStats = async (userId) => {
+    const query = `
+        SELECT 
+            COUNT(*) as total_sessions,
+            COUNT(CASE WHEN expires_at > NOW() THEN 1 END) as active_sessions,
+            MAX(last_activity) as last_activity,
+            MIN(created_at) as first_session
+        FROM user_sessions
+        WHERE user_id = $1
+    `;
+    const values = [userId];
+    const { rows } = await pool.query(query);
+    return rows[0];
 };
 
 export {
@@ -74,5 +124,7 @@ export {
     updateSessionActivity,
     deleteSession,
     deleteAllUserSessions,
-    getActiveSessions
+    getActiveSessions,
+    cleanupExpiredSessions,
+    getSessionStats
 }; 

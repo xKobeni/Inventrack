@@ -37,7 +37,7 @@ export const fetchAllUsers = async (req, res) => {
         
         // Remove sensitive information from response
         const sanitizedUsers = users.map(user => ({
-            id: user.id,
+            id: user.user_id,
             name: user.name,
             email: user.email,
             role: user.role,

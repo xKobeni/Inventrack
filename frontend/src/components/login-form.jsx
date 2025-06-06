@@ -7,6 +7,7 @@ import useAuthStore from "../store/useAuthStore.js"
 import { useToast } from "../hooks/use-toast.js"
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
+import { Eye, EyeOff } from 'lucide-react'
 
 export function LoginForm({
   className,
@@ -17,6 +18,7 @@ export function LoginForm({
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const [showPassword, setShowPassword] = useState(false)
 
   // Debug: Check auth state on component mount
   useEffect(() => {
@@ -84,7 +86,25 @@ export function LoginForm({
           <div className="flex items-center">
             <Label htmlFor="password">Password</Label>
           </div>
-          <Input id="password" name="password" type="password" placeholder="********" required />
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="********"
+              required
+              className="pr-10"
+            />
+            <button
+              type="button"
+              tabIndex={-1}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+          </div>
           <div className="flex items-center">
             <Checkbox id="remember-me" />
             <label

@@ -117,10 +117,37 @@ CREATE TABLE IF NOT EXISTS user_preferences (
 CREATE TABLE IF NOT EXISTS user_sessions (
     session_id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(user_id),
-    token VARCHAR(255) NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
     device_info JSONB,
     ip_address VARCHAR(45),
     last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NOT NULL
+    expires_at TIMESTAMP NOT NULL CHECK (expires_at > CURRENT_TIMESTAMP),
+    CONSTRAINT valid_expiration CHECK (expires_at > created_at)
 );
+
+-- Add indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(token);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions(expires_at);
+
+-- Create a function to clean up expired sessions
+CREATE OR REPLACE FUNCTION cleanup_expired_sessions()
+RETURNS void AS $$
+BEGIN
+    DELETE FROM user_sessions WHERE expires_at < CURRENT_TIMESTAMP;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create a trigger to automatically clean up expired sessions
+CREATE OR REPLACE FUNCTION trigger_cleanup_expired_sessions()
+RETURNS trigger AS $$
+BEGIN
+    PERFORM cleanup_expired_sessions();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER cleanup_sessions_trigger
+    AFTER INSERT ON user_sessions
+    EXECUTE FUNCTION trigger_cleanup_expired_sessions();
