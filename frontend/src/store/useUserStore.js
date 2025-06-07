@@ -51,6 +51,48 @@ const useUserStore = create((set) => ({
     }
   },
 
+  // Update profile picture
+  updateProfilePicture: async (file) => {
+    try {
+      set({ isLoading: true, error: null });
+
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('File size must not exceed 5MB');
+      }
+
+      // Validate file type
+      if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+        throw new Error('Only JPEG, PNG, and GIF images are allowed');
+      }
+
+      // Convert file to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise((resolve, reject) => {
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+      });
+      reader.readAsDataURL(file);
+      const base64Data = await base64Promise;
+      
+      // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+      const base64Image = base64Data.split(',')[1];
+      
+      const { data } = await api.put('/users/profile', {
+        profile_picture: base64Image,
+        profile_picture_type: file.type
+      });
+
+      return data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update profile picture';
+      set({ error: errorMessage });
+      throw new Error(errorMessage);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
   // Change password
   changePassword: async (passwordData) => {
     try {

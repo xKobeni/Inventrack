@@ -87,16 +87,26 @@ export const createSessionController = async (req, res) => {
         const userId = req.user.id;
         const deviceInfo = req.body.device_info || {};
         const ipAddress = req.ip;
+        const locationData = {
+            country: req.body.location?.country,
+            city: req.body.location?.city,
+            region: req.body.location?.region
+        };
 
         const token = generateToken(req.user);
-        const session = await createSession(userId, token, deviceInfo, ipAddress);
+        const session = await createSession(userId, token, deviceInfo, ipAddress, locationData);
 
         res.status(200).json({
             success: true,
             message: 'Session created successfully',
             data: {
                 token: session.token,
-                expires_at: session.expires_at
+                expires_at: session.expires_at,
+                location: {
+                    country: session.location_country,
+                    city: session.location_city,
+                    region: session.location_region
+                }
             }
         });
     } catch (error) {

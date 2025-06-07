@@ -57,6 +57,31 @@ export const updateProfileValidation = [
         .optional()
         .isLength({ min: 6 })
         .withMessage('Password must be at least 6 characters long'),
+    body('profile_picture')
+        .optional()
+        .custom((value, { req }) => {
+            if (!value) return true;
+            // Accept base64 string
+            if (typeof value !== 'string') {
+                throw new Error('Profile picture must be a base64-encoded string');
+            }
+            // Check if it's valid base64
+            const base64Pattern = /^(?:[A-Za-z0-9+/]{4})*?(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+            if (!base64Pattern.test(value)) {
+                throw new Error('Profile picture must be a valid base64 string');
+            }
+            // Check file size (5MB limit)
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            const sizeInBytes = Math.ceil((value.length * 3) / 4); // base64 to bytes
+            if (sizeInBytes > maxSize) {
+                throw new Error('Profile picture size must not exceed 5MB');
+            }
+            return true;
+        }),
+    body('profile_picture_type')
+        .optional()
+        .isIn(['image/jpeg', 'image/png', 'image/gif'])
+        .withMessage('Profile picture must be a JPEG, PNG, or GIF image'),
     validate
 ];
 
@@ -79,6 +104,31 @@ export const adminUpdateUserValidation = [
         .optional()
         .isIn(['user', 'admin'])
         .withMessage('Role must be either "user" or "admin"'),
+    body('profile_picture')
+        .optional()
+        .custom((value, { req }) => {
+            if (!value) return true;
+            // Accept base64 string
+            if (typeof value !== 'string') {
+                throw new Error('Profile picture must be a base64-encoded string');
+            }
+            // Check if it's valid base64
+            const base64Pattern = /^(?:[A-Za-z0-9+/]{4})*?(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+            if (!base64Pattern.test(value)) {
+                throw new Error('Profile picture must be a valid base64 string');
+            }
+            // Check file size (5MB limit)
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            const sizeInBytes = Math.ceil((value.length * 3) / 4); // base64 to bytes
+            if (sizeInBytes > maxSize) {
+                throw new Error('Profile picture size must not exceed 5MB');
+            }
+            return true;
+        }),
+    body('profile_picture_type')
+        .optional()
+        .isIn(['image/jpeg', 'image/png', 'image/gif'])
+        .withMessage('Profile picture must be a JPEG, PNG, or GIF image'),
     validate
 ];
 

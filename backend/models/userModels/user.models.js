@@ -57,8 +57,9 @@ const getAllUsers = async ({ limit, offset, search, role, isActive, sortBy, sort
 }
 
 const createUser = async (user) => {
-    const query = 'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING *';
-    const values = [user.name, user.email, user.password, user.role];
+    const profilePictureBuffer = user.profile_picture ? Buffer.from(user.profile_picture, 'base64') : null;
+    const query = 'INSERT INTO users (name, email, password, role, profile_picture, profile_picture_type) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *';
+    const values = [user.name, user.email, user.password, user.role, profilePictureBuffer, user.profile_picture_type];
     const { rows } = await pool.query(query, values);
     return rows[0]; // Return the created user
 }
@@ -78,16 +79,19 @@ const activateUser = async (userId) => {
 }
 
 const updateUser = async (userId, userData) => {
-    const { name, email, password, role } = userData;
+    const { name, email, password, role, profile_picture, profile_picture_type } = userData;
+    const profilePictureBuffer = profile_picture ? Buffer.from(profile_picture, 'base64') : null;
     const query = `
         UPDATE users 
         SET name = COALESCE($1, name), 
             email = COALESCE($2, email), 
             password = COALESCE($3, password), 
-            role = COALESCE($4, role) 
-        WHERE user_id = $5 
+            role = COALESCE($4, role),
+            profile_picture = COALESCE($5, profile_picture),
+            profile_picture_type = COALESCE($6, profile_picture_type)
+        WHERE user_id = $7 
         RETURNING *`;
-    const values = [name, email, password, role, userId];
+    const values = [name, email, password, role, profilePictureBuffer, profile_picture_type, userId];
     const { rows } = await pool.query(query, values);
     return rows[0]; // Return the updated user
 }
@@ -106,14 +110,17 @@ const bulkUpdateUsers = async (userIds, updateData) => {
 
         const results = [];
         for (const userId of userIds) {
+            const profilePictureBuffer = updateData.profile_picture ? Buffer.from(updateData.profile_picture, 'base64') : null;
             const query = `
                 UPDATE users 
                 SET name = COALESCE($1, name), 
                     email = COALESCE($2, email), 
                     password = COALESCE($3, password), 
                     role = COALESCE($4, role),
-                    is_active = COALESCE($5, is_active)
-                WHERE user_id = $6 
+                    is_active = COALESCE($5, is_active),
+                    profile_picture = COALESCE($6, profile_picture),
+                    profile_picture_type = COALESCE($7, profile_picture_type)
+                WHERE user_id = $8 
                 RETURNING *`;
             const values = [
                 updateData.name,
@@ -121,6 +128,8 @@ const bulkUpdateUsers = async (userIds, updateData) => {
                 updateData.password,
                 updateData.role,
                 updateData.is_active,
+                profilePictureBuffer,
+                updateData.profile_picture_type,
                 userId
             ];
             const { rows } = await client.query(query, values);

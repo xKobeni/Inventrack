@@ -1,6 +1,6 @@
 import pool from '../../config/db.config.js';
 
-const createSession = async (userId, token, deviceInfo, ipAddress) => {
+const createSession = async (userId, token, deviceInfo, ipAddress, locationData) => {
     const expiresAt = new Date(Date.now() + 24 * 3600000); // 24 hours from now
 
     const query = `
@@ -8,15 +8,27 @@ const createSession = async (userId, token, deviceInfo, ipAddress) => {
             user_id, 
             token, 
             device_info, 
-            ip_address, 
+            ip_address,
+            location_country,
+            location_city,
+            location_region,
             expires_at,
             created_at,
             last_activity
         )
-        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
         RETURNING *
     `;
-    const values = [userId, token, deviceInfo, ipAddress, expiresAt];
+    const values = [
+        userId, 
+        token, 
+        deviceInfo, 
+        ipAddress,
+        locationData?.country || null,
+        locationData?.city || null,
+        locationData?.region || null,
+        expiresAt
+    ];
     const { rows } = await pool.query(query, values);
     return rows[0];
 };
