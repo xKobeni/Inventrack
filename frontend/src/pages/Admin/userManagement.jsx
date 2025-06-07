@@ -586,8 +586,16 @@ export default function UserManagement() {
             <div className="bg-white rounded-lg shadow-lg">
               {/* Avatar */}
               <div className="flex flex-col items-center justify-center bg-blue-50 py-6">
-                <div className="w-20 h-20 rounded-full bg-blue-200 flex items-center justify-center text-4xl font-bold text-blue-700 shadow">
-                  {userToView?.name?.[0]?.toUpperCase() || "?"}
+                <div className="w-20 h-20 rounded-full bg-blue-200 flex items-center justify-center text-4xl font-bold text-blue-700 shadow overflow-hidden">
+                  {userToView?.profile_picture ? (
+                    <img 
+                      src={userToView.profile_picture} 
+                      alt={userToView?.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    userToView?.name?.[0]?.toUpperCase() || "?"
+                  )}
                 </div>
                 <div className="mt-2 text-lg font-semibold">{userToView?.name}</div>
                 <div className="text-sm text-gray-500">{userToView?.email}</div>

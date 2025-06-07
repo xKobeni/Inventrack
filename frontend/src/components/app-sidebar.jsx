@@ -9,7 +9,7 @@ import {
   UserCircle,
   LogOut,
 } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+//import { useNavigate } from "react-router-dom"
 import useAuthStore from "../store/useAuthStore"
 
 import { NavMain } from "@/components/nav-main"
@@ -28,7 +28,7 @@ export function AppSidebar({
   ...props
 }) {
   const { user, logout } = useAuthStore();
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
 
   // Navigation items based on user role
   const getNavigationItems = () => {
@@ -58,7 +58,7 @@ export function AppSidebar({
           icon: Users,
           items: [
             {
-              title: "All Users",
+              title: "Users",
               url: "/admin/users",
             },
             {
@@ -201,25 +201,18 @@ export function AppSidebar({
     return commonItems;
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
-  const userData = {
-    name: user?.name || 'User',
-    email: user?.email || '',
-    avatar: user?.avatar || '',
-    role: user?.role || 'user',
-  };
+  // Pass all user fields directly for live updates
+  const userData = user || {};
 
   const teams = [
     {
       name: "InvenTrack",
       logo: GalleryVerticalEnd,
-      plan: "Web App",
+      plan: "General Services Office",
     },
   ];
+
+  const handleLogout = logout;
 
   return (
     <Sidebar collapsible="icon" {...props}>

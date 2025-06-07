@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     role VARCHAR(50) NOT NULL CHECK (role IN ('admin', 'gso_staff', 'department_rep')),
     department_id INTEGER REFERENCES departments(department_id),
+    profile_picture BYTEA,
+    profile_picture_type VARCHAR(50),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -120,6 +122,9 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     token VARCHAR(255) NOT NULL UNIQUE,
     device_info JSONB,
     ip_address VARCHAR(45),
+    location_country VARCHAR(100),
+    location_city VARCHAR(100),
+    location_region VARCHAR(100),
     last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NOT NULL CHECK (expires_at > CURRENT_TIMESTAMP),

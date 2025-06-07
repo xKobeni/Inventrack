@@ -32,6 +32,12 @@ const login = async (req, res) => {
         
         const session = await createSession(user.user_id, token, deviceInfo, req.realIP);
 
+        // Convert profile_picture buffer to base64 data URL if it exists
+        let profilePicture = null;
+        if (user.profile_picture && user.profile_picture_type) {
+            profilePicture = `data:${user.profile_picture_type};base64,${Buffer.from(user.profile_picture).toString('base64')}`;
+        }
+
         return res.status(200).json({
             message: 'Login successful',
             token,
@@ -44,6 +50,8 @@ const login = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                profile_picture: profilePicture,
+                profile_picture_type: user.profile_picture_type,
             },
         });
     } catch (error) {
@@ -65,12 +73,20 @@ const registerUser = async (req, res) => {
         const newUser = { name, email, password: hashedPassword, role };
         const createdUser = await createUser(newUser);
 
+        // Convert profile_picture buffer to base64 data URL if it exists
+        let profilePicture = null;
+        if (createdUser.profile_picture && createdUser.profile_picture_type) {
+            profilePicture = `data:${createdUser.profile_picture_type};base64,${Buffer.from(createdUser.profile_picture).toString('base64')}`;
+        }
+
         return res.status(201).json({
             message: 'User registered successfully',
             user: {
                 id: createdUser.id,
                 email: createdUser.email,
                 role: createdUser.role,
+                profile_picture: profilePicture,
+                profile_picture_type: createdUser.profile_picture_type,
             },
         });
     } catch (error) {

@@ -17,7 +17,7 @@ dotenv.config(); // Load environment variables from .env file
 const app = express();
 
 // Trust proxy to get real IP address
-app.set('trust proxy', true);
+app.set('trust proxy', ['127.0.0.1', '::1']); // Only trust localhost
 
 // IP address middleware
 app.use((req, res, next) => {
@@ -43,7 +43,8 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '10mb'}));
+// app.use(express.urlencoded({ limit: '10mb', extended: true })); // increase the limit of the request body
 app.use(cors());
 app.use(helmet()); // Security middleware for HTTP headers
 app.use(morgan("dev")); // Logging middleware
@@ -55,8 +56,8 @@ app.use("/departments", departmentRoutes);
 app.use("/inventory", inventoryRoutes);
 app.use("/procurement", procurementRoutes);
 app.use("/incident-reports", incidentReportsRoutes);
-app.use('/api/preferences', userPreferencesRoutes);
-app.use('/api/sessions', sessionRoutes);
+app.use('/preferences', userPreferencesRoutes);
+app.use('/sessions', sessionRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -76,5 +77,7 @@ app.use((req, res) => {
         message: "The requested resource was not found"
     });
 });
+
+
 
 export default app;

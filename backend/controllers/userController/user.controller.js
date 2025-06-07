@@ -42,7 +42,8 @@ export const fetchAllUsers = async (req, res) => {
             email: user.email,
             role: user.role,
             is_active: user.is_active,
-            created_at: user.created_at
+            created_at: user.created_at,
+            profile_picture: user.profile_picture ? `data:${user.profile_picture_type};base64,${user.profile_picture.toString('base64')}` : null
         }));
 
         res.status(200).json({
@@ -124,6 +125,12 @@ export const getUserProfile = async (req, res) => {
             });
         }
 
+        // Convert binary image data to base64 if it exists
+        let profilePicture = null;
+        if (user.profile_picture) {
+            profilePicture = `data:${user.profile_picture_type};base64,${user.profile_picture.toString('base64')}`;
+        }
+
         res.status(200).json({
             success: true,
             message: 'User profile retrieved successfully',
@@ -133,7 +140,8 @@ export const getUserProfile = async (req, res) => {
                     name: user.name,
                     email: user.email,
                     role: user.role,
-                    is_active: user.is_active
+                    is_active: user.is_active,
+                    profile_picture: profilePicture
                 }
             }
         });
@@ -150,7 +158,7 @@ export const getUserProfile = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
     try {
         const userId = req.user.id; // From auth middleware
-        const { name, email, password } = req.body;
+        const { name, email, password, profile_picture, profile_picture_type } = req.body;
 
         // If password is provided, hash it
         let hashedPassword;
@@ -162,8 +170,16 @@ export const updateUserProfile = async (req, res) => {
         const updatedUser = await updateUser(userId, {
             name,
             email,
-            password: hashedPassword
+            password: hashedPassword,
+            profile_picture,
+            profile_picture_type
         });
+
+        // Convert binary image data to base64 if it exists
+        let profilePicture = null;
+        if (updatedUser.profile_picture) {
+            profilePicture = `data:${updatedUser.profile_picture_type};base64,${updatedUser.profile_picture.toString('base64')}`;
+        }
 
         res.status(200).json({
             success: true,
@@ -173,7 +189,8 @@ export const updateUserProfile = async (req, res) => {
                     id: updatedUser.id,
                     name: updatedUser.name,
                     email: updatedUser.email,
-                    role: updatedUser.role
+                    role: updatedUser.role,
+                    profile_picture: profilePicture
                 }
             }
         });
@@ -342,7 +359,7 @@ export const updateAnyUserProfile = async (req, res) => {
         });
     }
     const userId = req.params.id;
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, profile_picture, profile_picture_type } = req.body;
 
     let hashedPassword;
     if (password) {
@@ -354,7 +371,9 @@ export const updateAnyUserProfile = async (req, res) => {
         name,
         email,
         password: hashedPassword,
-        role
+        role,
+        profile_picture,
+        profile_picture_type
     });
 
     if (!updatedUser) {
@@ -362,6 +381,12 @@ export const updateAnyUserProfile = async (req, res) => {
             success: false,
             message: 'User not found'
         });
+    }
+
+    // Convert binary image data to base64 if it exists
+    let profilePicture = null;
+    if (updatedUser.profile_picture) {
+        profilePicture = `data:${updatedUser.profile_picture_type};base64,${updatedUser.profile_picture.toString('base64')}`;
     }
 
     res.status(200).json({
@@ -373,7 +398,8 @@ export const updateAnyUserProfile = async (req, res) => {
                 name: updatedUser.name,
                 email: updatedUser.email,
                 role: updatedUser.role,
-                is_active: updatedUser.is_active
+                is_active: updatedUser.is_active,
+                profile_picture: profilePicture
             }
         }
     });
