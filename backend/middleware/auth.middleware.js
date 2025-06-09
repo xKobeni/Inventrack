@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { getUserByEmail } from '../models/userModels/user.models.js';
+import { getUserById } from '../models/userModels/user.models.js';
 import { isBlacklisted } from '../utils/tokenBlacklist.js';
 
 
@@ -31,8 +31,8 @@ export const authMiddleware = async (req, res, next) => {
         // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // Get user from database
-        const user = await getUserByEmail(decoded.email);
+        // Get user from database using ID
+        const user = await getUserById(decoded.id);
         
         if (!user) {
             return res.status(401).json({

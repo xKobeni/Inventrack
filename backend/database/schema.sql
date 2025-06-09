@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS access_permissions (
     permission_id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(user_id),
+    user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
     module VARCHAR(100) NOT NULL,
     is_granted BOOLEAN DEFAULT FALSE,
     requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -80,15 +80,19 @@ CREATE TABLE IF NOT EXISTS incident_reports (
 
 CREATE TABLE IF NOT EXISTS notifications (
     notification_id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(user_id),
+    user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
     message TEXT NOT NULL,
+    type VARCHAR(50) DEFAULT 'info' CHECK (type IN ('info', 'warning', 'success', 'error', 'action')),
+    category VARCHAR(50) DEFAULT 'system',
+    action_url TEXT,
+    data JSONB DEFAULT '{}',
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS audit_logs (
     log_id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(user_id),
+    user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
     action VARCHAR(100) NOT NULL,
     details JSONB,
     target_table VARCHAR(100),
@@ -98,7 +102,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
     token_id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(user_id),
+    user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
     token VARCHAR(255) NOT NULL,
     expires_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -107,18 +111,19 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 
 CREATE TABLE IF NOT EXISTS user_preferences (
     preference_id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(user_id),
+    user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
     notification_settings JSONB DEFAULT '{"email": true, "push": true}',
     language VARCHAR(10) DEFAULT 'en',
     theme VARCHAR(20) DEFAULT 'light',
     timezone VARCHAR(50) DEFAULT 'UTC',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    
 );
 
 CREATE TABLE IF NOT EXISTS user_sessions (
     session_id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(user_id),
+    user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
     token VARCHAR(255) NOT NULL UNIQUE,
     device_info JSONB,
     ip_address VARCHAR(45),

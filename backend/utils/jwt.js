@@ -6,7 +6,6 @@ config();
 const generateToken = (user) => {
     const payload = {
         id: user.id,
-        email: user.email,
         role: user.role,
     };
 

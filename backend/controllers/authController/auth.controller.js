@@ -2,7 +2,42 @@ import bcrypt from 'bcrypt';
 import { generateToken } from '../../utils/jwt.js';
 import { getUserByEmail, createUser } from '../../models/userModels/user.models.js';
 import { addToBlacklist } from '../../utils/tokenBlacklist.js';
-import { createSession, deleteSession } from '../../models/authModels/session.models.js';
+import { createSession, deleteSession, findSimilarSession, updateSessionActivity, updateSessionTokenAndActivity, deleteSessionByDevice } from '../../models/authModels/session.models.js';
+
+// Helper to parse browser and platform from user-agent
+function parseUserAgent(ua) {
+    let browser = 'Unknown';
+    let platform = 'Unknown';
+    if (!ua) return { browser, platform };
+    ua = ua.toLowerCase();
+    // Browser
+    if (ua.includes('edg/')) browser = 'Microsoft Edge';
+    else if (ua.includes('chrome/')) browser = 'Chromium';
+    else if (ua.includes('opera/')) browser = 'Opera';
+    else if (ua.includes('brave/')) browser = 'Brave';
+    else if (ua.includes('opera gx/')) browser = 'Opera GX';
+    else if (ua.includes('firefox/')) browser = 'Firefox';
+    else if (ua.includes('safari/') && !ua.includes('chrome/')) browser = 'Safari';
+    // Platform
+    if (ua.includes('windows')) platform = 'Windows';
+    else if (ua.includes('macintosh') || ua.includes('mac os')) platform = 'MacOS';
+    else if (ua.includes('linux')) platform = 'Linux';
+    else if (ua.includes('android')) platform = 'Android';
+    else if (ua.includes('iphone') || ua.includes('ipad')) platform = 'iOS';
+    return { browser, platform };
+}
+
+// Clean sec-ch-ua and sec-ch-ua-platform values
+function cleanBrowserString(browserStr) {
+    if (!browserStr) return 'Unknown';
+    // e.g. "'Chromium';v='134', 'Not:A-Brand';v='24', 'Opera GX';v='119'"
+    const match = browserStr.match(/'([^']+)'/);
+    return match ? match[1] : browserStr.split(';')[0].replace(/['"]/g, '').trim();
+}
+function cleanPlatformString(platformStr) {
+    if (!platformStr) return 'Unknown';
+    return platformStr.replace(/['"]/g, '').trim();
+}
 
 const login = async (req, res) => {
     const { email, password } = req.body;
@@ -21,16 +56,41 @@ const login = async (req, res) => {
             return res.status(401).json({ message: 'Invalid password' });
         }
 
-        const token = generateToken(user);
+        // Generate token with only id and role
+        const token = generateToken({
+            id: user.user_id,
+            role: user.role
+        });
         
-        // Create session with device info and IP
+        // Robust device info extraction
+        const ua = req.headers['user-agent'] || '';
+        let browser = req.headers['sec-ch-ua'] || '';
+        let platform = req.headers['sec-ch-ua-platform'] || '';
+        // Normalize if missing or complex
+        if (!browser || browser === '""') {
+            browser = parseUserAgent(ua).browser;
+        } else {
+            browser = cleanBrowserString(browser);
+        }
+        if (!platform || platform === '""') {
+            platform = parseUserAgent(ua).platform;
+        } else {
+            platform = cleanPlatformString(platform);
+        }
         const deviceInfo = {
-            userAgent: req.headers['user-agent'],
-            platform: req.headers['sec-ch-ua-platform'],
-            browser: req.headers['sec-ch-ua']
+            userAgent: ua,
+            platform,
+            browser
         };
-        
-        const session = await createSession(user.user_id, token, deviceInfo, req.realIP);
+        // Deduplication: check for existing session
+        const existingSession = await findSimilarSession(user.user_id, deviceInfo);
+        let session;
+        if (existingSession) {
+            // Update last_activity and update token to the new one
+            session = await updateSessionTokenAndActivity(existingSession.session_id, user.user_id, token);
+        } else {
+            session = await createSession(user.user_id, token, deviceInfo, req.realIP, req.body.location || {});
+        }
 
         // Convert profile_picture buffer to base64 data URL if it exists
         let profilePicture = null;
@@ -103,13 +163,35 @@ const logout = async (req, res) => {
         }
 
         const token = authHeader.split(' ')[1];
-        
-        // Delete the session from the database
-        await deleteSession(token);
-        
+
+        // Get user info from token (assume auth middleware already ran)
+        const user = req.user;
+        if (!user) {
+            return res.status(401).json({ message: 'User not found' });
+        }
+
+        // Robust device info extraction
+        const ua = req.headers['user-agent'] || '';
+        let browser = req.headers['sec-ch-ua'] || '';
+        let platform = req.headers['sec-ch-ua-platform'] || '';
+        if (!browser || browser === '""') {
+            browser = parseUserAgent(ua).browser;
+        } else {
+            browser = cleanBrowserString(browser);
+        }
+        if (!platform || platform === '""') {
+            platform = parseUserAgent(ua).platform;
+        } else {
+            platform = cleanPlatformString(platform);
+        }
+        const deviceInfo = { userAgent: ua, platform, browser };
+
+        // Delete all sessions for this device/browser
+        await deleteSessionByDevice(user.id, deviceInfo);
+
         // Add token to blacklist
         addToBlacklist(token);
-        
+
         return res.status(200).json({ message: 'Logout successful' });
     } catch (error) {
         console.error('Error during logout:', error);
