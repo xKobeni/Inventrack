@@ -2,11 +2,42 @@ import {
     createSession,
     getSession,
     updateSessionActivity,
+    updateSessionActivityWithInfo,
     deleteSession,
     deleteAllUserSessions,
-    getActiveSessions
+    getActiveSessions,
+    getSessionById
 } from '../../models/authModels/session.models.js';
 import { generateToken } from '../../utils/jwt.js';
+
+// Get a specific session by ID
+export const getSessionByIdController = async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        const userId = req.user.id;
+
+        const session = await getSessionById(sessionId, userId);
+
+        if (!session) {
+            return res.status(404).json({
+                success: false,
+                message: 'Session not found or you do not have permission to access it'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Session retrieved successfully',
+            data: { session }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error retrieving session',
+            error: error.message
+        });
+    }
+};
 
 // Get all active sessions for the current user
 export const getActiveSessionsController = async (req, res) => {
@@ -62,6 +93,39 @@ export const logoutSessionController = async (req, res) => {
     }
 };
 
+// Logout from a specific session by ID
+export const logoutSessionByIdController = async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        const userId = req.user.id;
+
+        // Get the session to verify ownership
+        const sessions = await getActiveSessions(userId);
+        const targetSession = sessions.find(s => s.session_id === sessionId);
+
+        if (!targetSession) {
+            return res.status(404).json({
+                success: false,
+                message: 'Session not found or you do not have permission to access it'
+            });
+        }
+
+        // Delete the session
+        await deleteSession(sessionId);
+
+        res.status(200).json({
+            success: true,
+            message: 'Session logged out successfully'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error logging out session',
+            error: error.message
+        });
+    }
+};
+
 // Logout from all sessions
 export const logoutAllSessionsController = async (req, res) => {
     try {
@@ -93,7 +157,12 @@ export const createSessionController = async (req, res) => {
             region: req.body.location?.region
         };
 
-        const token = generateToken(req.user);
+        // Generate new token with updated user info
+        const token = generateToken({
+            id: userId,
+            role: req.user.role
+        });
+        
         const session = await createSession(userId, token, deviceInfo, ipAddress, locationData);
 
         res.status(200).json({
@@ -113,6 +182,48 @@ export const createSessionController = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error creating session',
+            error: error.message
+        });
+    }
+};
+
+// Update session activity
+export const updateSessionActivityController = async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        const userId = req.user.id;
+        const { device_info, ip_address } = req.body;
+
+        // Get the session first to verify it exists and belongs to the user
+        const session = await getSessionById(sessionId, userId);
+        if (!session) {
+            return res.status(404).json({
+                success: false,
+                message: 'Session not found or you do not have permission to access it'
+            });
+        }
+
+        // Update the session activity
+        const updatedSession = device_info || ip_address
+            ? await updateSessionActivityWithInfo(sessionId, userId, device_info, ip_address)
+            : await updateSessionActivity(sessionId, userId);
+
+        if (!updatedSession) {
+            return res.status(400).json({
+                success: false,
+                message: 'Failed to update session activity'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Session activity updated successfully',
+            data: { session: updatedSession }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error updating session activity',
             error: error.message
         });
     }

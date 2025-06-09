@@ -51,15 +51,79 @@ const getSession = async (token) => {
     return rows[0];
 };
 
-const updateSessionActivity = async (sessionId) => {
+const getSessionById = async (sessionId, userId) => {
+    const query = `
+        SELECT 
+            s.*,
+            u.email,
+            u.name,
+            u.role
+        FROM user_sessions s
+        JOIN users u ON s.user_id = u.user_id
+        WHERE s.session_id = $1 
+        AND s.user_id = $2
+        AND s.expires_at > NOW()
+        AND u.is_active = true
+    `;
+    const values = [sessionId, userId];
+    const { rows } = await pool.query(query, values);
+    return rows[0];
+};
+
+const updateSessionActivity = async (sessionId, userId) => {
     const query = `
         UPDATE user_sessions
-        SET last_activity = NOW()
+        SET 
+            last_activity = NOW(),
+            device_info = CASE 
+                WHEN device_info IS NULL THEN $3
+                ELSE device_info
+            END,
+            ip_address = CASE 
+                WHEN ip_address IS NULL THEN $4
+                ELSE ip_address
+            END
         WHERE session_id = $1
+        AND user_id = $2
         AND expires_at > NOW()
         RETURNING *
     `;
-    const values = [sessionId];
+    const values = [sessionId, userId, null, null]; // device_info and ip_address are optional
+    const { rows } = await pool.query(query, values);
+    return rows[0];
+};
+
+const updateSessionActivityWithInfo = async (sessionId, userId, deviceInfo = null, ipAddress = null) => {
+    const query = `
+        UPDATE user_sessions
+        SET 
+            last_activity = NOW(),
+            device_info = CASE 
+                WHEN $3::jsonb IS NOT NULL THEN $3::jsonb
+                ELSE device_info
+            END,
+            ip_address = CASE 
+                WHEN $4::text IS NOT NULL THEN $4::text
+                ELSE ip_address
+            END
+        WHERE session_id = $1
+        AND user_id = $2
+        AND expires_at > NOW()
+        RETURNING *
+    `;
+    const values = [sessionId, userId, deviceInfo, ipAddress];
+    const { rows } = await pool.query(query, values);
+    return rows[0];
+};
+
+const updateSessionTokenAndActivity = async (sessionId, userId, newToken) => {
+    const query = `
+        UPDATE user_sessions
+        SET last_activity = NOW(), token = $3
+        WHERE session_id = $1 AND user_id = $2 AND expires_at > NOW()
+        RETURNING *
+    `;
+    const values = [sessionId, userId, newToken];
     const { rows } = await pool.query(query, values);
     return rows[0];
 };
@@ -73,6 +137,23 @@ const deleteSession = async (token) => {
     const values = [token];
     const { rows } = await pool.query(query, values);
     return rows[0];
+};
+
+const deleteSessionByDevice = async (userId, deviceInfo) => {
+    const query = `
+        DELETE FROM user_sessions
+        WHERE user_id = $1
+        AND device_info->>'platform' = $2
+        AND device_info->>'browser' = $3
+        RETURNING *
+    `;
+    const values = [
+        userId,
+        deviceInfo.platform,
+        deviceInfo.browser
+    ];
+    const { rows } = await pool.query(query, values);
+    return rows;
 };
 
 const deleteAllUserSessions = async (userId) => {
@@ -130,13 +211,36 @@ const getSessionStats = async (userId) => {
     return rows[0];
 };
 
+const findSimilarSession = async (userId, deviceInfo) => {
+    const query = `
+        SELECT * FROM user_sessions
+        WHERE user_id = $1
+        AND device_info->>'platform' = $2
+        AND device_info->>'browser' = $3
+        AND expires_at > NOW()
+        LIMIT 1
+    `;
+    const values = [
+        userId,
+        deviceInfo.platform,
+        deviceInfo.browser
+    ];
+    const { rows } = await pool.query(query, values);
+    return rows[0];
+};
+
 export {
     createSession,
     getSession,
+    getSessionById,
     updateSessionActivity,
+    updateSessionActivityWithInfo,
+    updateSessionTokenAndActivity,
     deleteSession,
+    deleteSessionByDevice,
     deleteAllUserSessions,
     getActiveSessions,
     cleanupExpiredSessions,
-    getSessionStats
+    getSessionStats,
+    findSimilarSession
 }; 
