@@ -102,8 +102,8 @@ export const adminUpdateUserValidation = [
         .withMessage('Password must be at least 6 characters long'),
     body('role')
         .optional()
-        .isIn(['user', 'admin'])
-        .withMessage('Role must be either "user" or "admin"'),
+        .isIn(['user', 'admin', 'department_rep', 'gso_staff'])
+        .withMessage('Role must be either "user", "admin", "department_rep", or "gso_staff"'),
     body('profile_picture')
         .optional()
         .custom((value, { req }) => {

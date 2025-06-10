@@ -73,3 +73,13 @@ export const parseBrowserString = (browserStr) => {
     }
   };
   
+  // Helper to get available users for department head selection
+  export const getAvailableUsers = (users, departments, currentHeadId = null) => {
+    // Get all department heads except the current one (if editing)
+    const currentDepartmentHeads = departments
+      .filter(dept => dept.head_user_id && String(dept.head_user_id) !== String(currentHeadId))
+      .map(dept => String(dept.head_user_id));
+    // Filter out users who are already department heads (except the current one)
+    return users.filter(user => !currentDepartmentHeads.includes(String(user.id)));
+  };
+  

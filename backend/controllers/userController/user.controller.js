@@ -43,7 +43,9 @@ export const fetchAllUsers = async (req, res) => {
             role: user.role,
             is_active: user.is_active,
             created_at: user.created_at,
-            profile_picture: user.profile_picture ? `data:${user.profile_picture_type};base64,${user.profile_picture.toString('base64')}` : null
+            profile_picture: user.profile_picture ? `data:${user.profile_picture_type};base64,${user.profile_picture.toString('base64')}` : null,
+            department_id: user.department_id,
+            department_name: user.department_name || null
         }));
 
         res.status(200).json({
@@ -99,7 +101,9 @@ export const fetchUserById = async (req, res) => {
                     name: user.name,
                     email: user.email,
                     role: user.role,
-                    is_active: user.is_active
+                    is_active: user.is_active,
+                    department_id: user.department_id,
+                    department_name: user.department_name || null
                 }
             }
         });
@@ -141,7 +145,9 @@ export const getUserProfile = async (req, res) => {
                     email: user.email,
                     role: user.role,
                     is_active: user.is_active,
-                    profile_picture: profilePicture
+                    profile_picture: profilePicture,
+                    department_id: user.department_id,
+                    department_name: user.department_name || null
                 }
             }
         });
@@ -290,6 +296,35 @@ export const activateUserAccount = async (req, res) => {
     }
 };
 
+// Delete any user (admin only)
+export const deleteAnyUserAccount = async (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({
+            success: false,
+            message: 'Access denied. Admins only.'
+        });
+    }
+    const userId = req.params.id;
+    const deletedUser = await deleteUser(userId);
+    if (!deletedUser) {
+        return res.status(404).json({
+            success: false,
+            message: 'User not found'
+        });
+    }
+    res.status(200).json({
+        success: true,
+        message: 'User deleted successfully',
+        data: {
+            user: {
+                id: deletedUser.user_id,
+                name: deletedUser.name,
+                email: deletedUser.email
+            }
+        }
+    });
+};
+
 // Deactivate any user (admin only)
 export const deactivateAnyUserAccount = async (req, res) => {
     if (req.user.role !== 'admin') {
@@ -359,7 +394,7 @@ export const updateAnyUserProfile = async (req, res) => {
         });
     }
     const userId = req.params.id;
-    const { name, email, password, role, profile_picture, profile_picture_type } = req.body;
+    const { name, email, password, role, profile_picture, profile_picture_type, department_id } = req.body;
 
     let hashedPassword;
     if (password) {
@@ -373,7 +408,8 @@ export const updateAnyUserProfile = async (req, res) => {
         password: hashedPassword,
         role,
         profile_picture,
-        profile_picture_type
+        profile_picture_type,
+        department_id
     });
 
     if (!updatedUser) {

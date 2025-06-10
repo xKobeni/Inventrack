@@ -74,7 +74,7 @@ export default function ProfilePage() {
       name: user?.name || "",
       email: user?.email || "",
       phone: user?.phone || "",
-      department: user?.department || "",
+      department: user?.department_name || user?.department || "",
     }));
 
     // Fetch user sessions
@@ -354,7 +354,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Building className="h-4 w-4" />
-                      <span>{user?.department || 'No Department'}</span>
+                      <span>{user?.department_name || user?.department || 'Not assigned'}</span>
                     </div>
                   </div>
                   <Badge variant="secondary" className="mt-2">{formatRole(user?.role)}</Badge>
@@ -436,8 +436,8 @@ export default function ProfilePage() {
                                     id="department"
                                     name="department"
                                     value={formData.department}
-                                    onChange={handleInputChange}
-                                    disabled={!isEditing}
+                                    disabled
+                                    readOnly
                                     className="pl-9"
                                   />
                                   <Building className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

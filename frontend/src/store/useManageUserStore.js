@@ -71,7 +71,8 @@ const useManageUserStore = create((set, get) => ({
         name: userData.name,
         email: data.user.email,
         role: data.user.role,
-        is_active: true
+        is_active: true,
+        department_id: data.user.department_id,
       };
       set({ users: [...get().users, newUser], isLoading: false });
       return newUser;

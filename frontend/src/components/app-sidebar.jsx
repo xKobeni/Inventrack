@@ -8,6 +8,7 @@ import {
   Users,
   UserCircle,
   LogOut,
+  Building,
 } from "lucide-react"
 //import { useNavigate } from "react-router-dom"
 import useAuthStore from "../store/useAuthStore"
@@ -64,6 +65,17 @@ export function AppSidebar({
             {
               title: "Add User",
               url: "/admin/users/add",
+            },
+          ],
+        },
+        {
+          title: "Department Management",
+          url: "/admin/departments",
+          icon: Building,
+          items: [
+            {
+              title: "Departments",
+              url: "/admin/departments",
             },
           ],
         },

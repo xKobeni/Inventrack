@@ -59,6 +59,7 @@ import { MoreHorizontal, Search, Plus, Pencil, Trash2, Power, PowerOff, Download
 import { useNavigate } from "react-router-dom";
 import { format } from 'date-fns';
 import { exportToCSV } from '../../utils/exports';
+import useDepartmentStore from "../../store/useDepartmentStore";
 
 export default function UserManagement() {
   const { toast } = useToast();
@@ -72,6 +73,7 @@ export default function UserManagement() {
     deactivateUser,
     editUser,
   } = useManageUserStore();
+  const { departments, fetchDepartments } = useDepartmentStore();
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -84,6 +86,7 @@ export default function UserManagement() {
     name: "",
     email: "",
     role: "",
+    department_id: ""
   });
   const [pageSize, setPageSize] = useState(10);
   const [jumpPage, setJumpPage] = useState('');
@@ -96,6 +99,7 @@ export default function UserManagement() {
 
   useEffect(() => {
     loadUsers();
+    fetchDepartments();
   }, [currentPage, roleFilter, statusFilter, pageSize, sortBy, sortOrder]);
 
   const loadUsers = async () => {
@@ -180,14 +184,30 @@ export default function UserManagement() {
       name: user.name,
       email: user.email,
       role: user.role,
+      department_id: user.department_id || ""
     });
     setIsEditDialogOpen(true);
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleDepartmentChange = (value) => {
+    setEditFormData(prev => ({ ...prev, department_id: value }));
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      await editUser(editingUser.id, editFormData);
+      await editUser(editingUser.id, {
+        ...editFormData,
+        department_id: editFormData.department_id || null
+      });
       toast({
         title: "Success",
         description: "User updated successfully",
@@ -202,14 +222,6 @@ export default function UserManagement() {
         variant: "destructive",
       });
     }
-  };
-
-  const handleEditInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
   };
 
   // Sorting handler
@@ -352,6 +364,9 @@ export default function UserManagement() {
                         <TableHead className="cursor-pointer select-none" onClick={() => handleSort('created_at')}>
                           Created {sortBy === 'created_at' && (sortOrder === 'asc' ? '▲' : '▼')}
                         </TableHead>
+                        <TableHead className="cursor-pointer select-none" onClick={() => handleSort('department_name')}>
+                          Department {sortBy === 'department_name' && (sortOrder === 'asc' ? '▲' : '▼')}
+                        </TableHead>
                         <TableHead className="w-[100px]">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -390,6 +405,7 @@ export default function UserManagement() {
                                 ? format(new Date(user.created_at), 'PP p')
                                 : 'N/A'}
                             </TableCell>
+                            <TableCell>{user.department_name || 'Not assigned'}</TableCell>
                             <TableCell>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -531,6 +547,22 @@ export default function UserManagement() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="department_id">Department</Label>
+                  <Select value={editFormData.department_id ? String(editFormData.department_id) : "none"} onValueChange={value => handleDepartmentChange(value === "none" ? null : value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {departments.map(dept => (
+                        <SelectItem key={dept.department_id} value={String(dept.department_id)}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <DialogFooter>
                 <Button
@@ -582,36 +614,27 @@ export default function UserManagement() {
 
         {/* View Dialog */}
         <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-          <DialogContent className="max-w-md p-0 overflow-hidden">
+          <DialogContent className="max-w-2xl p-0 overflow-hidden">
             <div className="bg-white rounded-lg shadow-lg">
-              {/* Avatar */}
-              <div className="flex flex-col items-center justify-center bg-blue-50 py-6">
-                <div className="w-20 h-20 rounded-full bg-blue-200 flex items-center justify-center text-4xl font-bold text-blue-700 shadow overflow-hidden">
-                  {userToView?.profile_picture ? (
-                    <img 
-                      src={userToView.profile_picture} 
-                      alt={userToView?.name} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    userToView?.name?.[0]?.toUpperCase() || "?"
-                  )}
-                </div>
-                <div className="mt-2 text-lg font-semibold">{userToView?.name}</div>
-                <div className="text-sm text-gray-500">{userToView?.email}</div>
-              </div>
-              <div className="px-6 py-4">
-                <div className="mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  User Details
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                  <div>
-                    <span className="block text-xs text-gray-500">Role</span>
-                    <span className="font-medium">{formatRole(userToView?.role)}</span>
+              {/* Header with Avatar */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 opacity-90"></div>
+                <div className="relative flex flex-col items-center justify-center py-8 px-6">
+                  <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center text-4xl font-bold text-blue-700 shadow-lg overflow-hidden border-4 border-white">
+                    {userToView?.profile_picture ? (
+                      <img 
+                        src={userToView.profile_picture} 
+                        alt={userToView?.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      userToView?.name?.[0]?.toUpperCase() || "?"
+                    )}
                   </div>
-                  <div>
-                    <span className="block text-xs text-gray-500">Status</span>
-                    <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                  <div className="mt-4 text-xl font-semibold text-white">{userToView?.name}</div>
+                  <div className="text-sm text-blue-100">{userToView?.email}</div>
+                  <div className="mt-2">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                       userToView?.is_active
                         ? "bg-green-100 text-green-800"
                         : "bg-red-100 text-red-800"
@@ -619,18 +642,124 @@ export default function UserManagement() {
                       {userToView?.is_active ? "Active" : "Inactive"}
                     </span>
                   </div>
-                  <div>
-                    <span className="block text-xs text-gray-500">Created</span>
-                    <span>
-                      {userToView?.created_at
-                        ? format(new Date(userToView.created_at), "PP p")
-                        : "N/A"}
-                    </span>
-                  </div>
-                  {/* Add more fields here if needed */}
                 </div>
               </div>
-              <div className="px-6 pb-4 flex justify-end">
+
+              {/* User Details */}
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Basic Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Basic Information</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <span className="block text-xs text-gray-500">Role</span>
+                        <span className="font-medium">{formatRole(userToView?.role)}</span>
+                      </div>
+                      <div>
+                        <span className="block text-xs text-gray-500">Department</span>
+                        <span className="font-medium">{userToView?.department_name || 'Not assigned'}</span>
+                      </div>
+                      <div>
+                        <span className="block text-xs text-gray-500">Created At</span>
+                        <span className="font-medium">
+                          {userToView?.created_at
+                            ? format(new Date(userToView.created_at), "PP p")
+                            : "N/A"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Account Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Account Information</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <span className="block text-xs text-gray-500">Last Login</span>
+                        <span className="font-medium">
+                          {userToView?.last_login
+                            ? format(new Date(userToView.last_login), "PP p")
+                            : "Never"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block text-xs text-gray-500">Account Status</span>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          userToView?.is_active
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}>
+                          {userToView?.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block text-xs text-gray-500">Email Verification</span>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          userToView?.email_verified
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}>
+                          {userToView?.email_verified ? "Verified" : "Not Verified"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="mt-6 pt-6 border-t">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Quick Actions</h3>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setIsViewDialogOpen(false);
+                        handleEdit(userToView);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Edit User
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setIsViewDialogOpen(false);
+                        handleStatusChange(userToView.id, !userToView.is_active);
+                      }}
+                    >
+                      {userToView?.is_active ? (
+                        <>
+                          <PowerOff className="h-4 w-4 mr-2" />
+                          Deactivate
+                        </>
+                      ) : (
+                        <>
+                          <Power className="h-4 w-4 mr-2" />
+                          Activate
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700"
+                      onClick={() => {
+                        setIsViewDialogOpen(false);
+                        handleDeleteClick(userToView);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete User
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 bg-gray-50 flex justify-end">
                 <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
                   Close
                 </Button>

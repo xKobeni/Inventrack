@@ -1,52 +1,62 @@
 import pool from '../../config/db.config.js';
 
 const getUserByEmail = async (email) => {
-    const query = 'SELECT * FROM users WHERE email = $1';
+    const query = `
+        SELECT u.*, d.name as department_name
+        FROM users u
+        LEFT JOIN departments d ON u.department_id = d.department_id
+        WHERE u.email = $1
+    `;
     const values = [email];
     const { rows } = await pool.query(query, values);
     return rows[0]; // Return the first user found
 }
 
 const getUserById = async (userId) => {
-    const query = 'SELECT * FROM users WHERE user_id = $1';
+    const query = `
+        SELECT u.*, d.name as department_name
+        FROM users u
+        LEFT JOIN departments d ON u.department_id = d.department_id
+        WHERE u.user_id = $1
+    `;
     const values = [userId];
     const { rows } = await pool.query(query, values);
     return rows[0]; // Return the user found
 }
 
 const getAllUsers = async ({ limit, offset, search, role, isActive, sortBy, sortOrder }) => {
-    let query = 'SELECT * FROM users WHERE 1=1';
+    let query = 'SELECT u.*, d.name as department_name FROM users u LEFT JOIN departments d ON u.department_id = d.department_id WHERE 1=1';
     const values = [];
     let paramCount = 1;
 
     // Add search condition
     if (search) {
-        query += ` AND (name ILIKE $${paramCount} OR email ILIKE $${paramCount})`;
+        query += ` AND (u.name ILIKE $${paramCount} OR u.email ILIKE $${paramCount} OR d.name ILIKE $${paramCount})`;
         values.push(`%${search}%`);
         paramCount++;
     }
 
     // Add role filter
     if (role) {
-        query += ` AND role = $${paramCount}`;
+        query += ` AND u.role = $${paramCount}`;
         values.push(role);
         paramCount++;
     }
 
     // Add active status filter
     if (isActive !== undefined) {
-        query += ` AND is_active = $${paramCount}`;
+        query += ` AND u.is_active = $${paramCount}`;
         values.push(isActive === 'true');
         paramCount++;
     }
 
     // Get total count before pagination
-    const countQuery = query.replace('SELECT *', 'SELECT COUNT(*)');
+    const countQuery = query.replace('SELECT u.*, d.name as department_name', 'SELECT COUNT(*)');
     const { rows: countRows } = await pool.query(countQuery, values);
     const total = parseInt(countRows[0].count);
 
     // Add sorting
-    query += ` ORDER BY ${sortBy} ${sortOrder}`;
+    query += ` ORDER BY u.${sortBy} ${sortOrder}`;
 
     // Add pagination
     query += ` LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
@@ -58,8 +68,8 @@ const getAllUsers = async ({ limit, offset, search, role, isActive, sortBy, sort
 
 const createUser = async (user) => {
     const profilePictureBuffer = user.profile_picture ? Buffer.from(user.profile_picture, 'base64') : null;
-    const query = 'INSERT INTO users (name, email, password, role, profile_picture, profile_picture_type) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *';
-    const values = [user.name, user.email, user.password, user.role, profilePictureBuffer, user.profile_picture_type];
+    const query = 'INSERT INTO users (name, email, password, role, department_id, profile_picture, profile_picture_type) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *';
+    const values = [user.name, user.email, user.password, user.role, user.department_id || null, profilePictureBuffer, user.profile_picture_type];
     const { rows } = await pool.query(query, values);
     return rows[0]; // Return the created user
 }
@@ -79,7 +89,7 @@ const activateUser = async (userId) => {
 }
 
 const updateUser = async (userId, userData) => {
-    const { name, email, password, role, profile_picture, profile_picture_type } = userData;
+    const { name, email, password, role, department_id, profile_picture, profile_picture_type } = userData;
     const profilePictureBuffer = profile_picture ? Buffer.from(profile_picture, 'base64') : null;
     const query = `
         UPDATE users 
@@ -87,11 +97,12 @@ const updateUser = async (userId, userData) => {
             email = COALESCE($2, email), 
             password = COALESCE($3, password), 
             role = COALESCE($4, role),
-            profile_picture = COALESCE($5, profile_picture),
-            profile_picture_type = COALESCE($6, profile_picture_type)
-        WHERE user_id = $7 
+            department_id = $5,
+            profile_picture = COALESCE($6, profile_picture),
+            profile_picture_type = COALESCE($7, profile_picture_type)
+        WHERE user_id = $8 
         RETURNING *`;
-    const values = [name, email, password, role, profilePictureBuffer, profile_picture_type, userId];
+    const values = [name, email, password, role, department_id || null, profilePictureBuffer, profile_picture_type, userId];
     const { rows } = await pool.query(query, values);
     return rows[0]; // Return the updated user
 }

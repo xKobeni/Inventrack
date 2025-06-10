@@ -112,6 +112,8 @@ const login = async (req, res) => {
                 role: user.role,
                 profile_picture: profilePicture,
                 profile_picture_type: user.profile_picture_type,
+                department_id: user.department_id,
+                department_name: user.department_name || null,
             },
         });
     } catch (error) {
@@ -121,7 +123,7 @@ const login = async (req, res) => {
 }
 
 const registerUser = async (req, res) => {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, department_id } = req.body;
 
     try {
         const existingUser = await getUserByEmail(email);
@@ -130,7 +132,7 @@ const registerUser = async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = { name, email, password: hashedPassword, role };
+        const newUser = { name, email, password: hashedPassword, role, department_id };
         const createdUser = await createUser(newUser);
 
         // Convert profile_picture buffer to base64 data URL if it exists
@@ -147,6 +149,7 @@ const registerUser = async (req, res) => {
                 role: createdUser.role,
                 profile_picture: profilePicture,
                 profile_picture_type: createdUser.profile_picture_type,
+                department_id: createdUser.department_id,
             },
         });
     } catch (error) {

@@ -4,7 +4,9 @@ import {
     fetchDepartmentById,
     createNewDepartment,
     updateExistingDepartment,
-    deleteExistingDepartment
+    deleteExistingDepartment,
+    activateExistingDepartment,
+    deactivateExistingDepartment
 } from '../controllers/department.controller.js';
 import { authMiddleware } from '../middleware/auth.middleware.js';
 import { 
@@ -32,5 +34,12 @@ router.put('/:id', [...departmentIdValidation, ...departmentUpdateValidation], u
 
 // Delete department (admin only)
 router.delete('/:id', departmentIdValidation, deleteExistingDepartment);
+
+// Activate department (admin only)
+router.put('/:id/activate', departmentIdValidation, activateExistingDepartment);
+
+// Deactivate department (admin only)
+router.put('/:id/deactivate', departmentIdValidation, deactivateExistingDepartment);
+
 
 export default router;

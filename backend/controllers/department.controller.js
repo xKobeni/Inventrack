@@ -1,4 +1,12 @@
-import { getAllDepartments, getDepartmentById, createDepartment, updateDepartment, deleteDepartment } from '../models/department.models.js';
+import { 
+    getAllDepartments, 
+    getDepartmentById, 
+    createDepartment, 
+    updateDepartment, 
+    deleteDepartment,
+    activateDepartment,
+    deactivateDepartment 
+} from '../models/department.models.js';
 
 // Get all departments (admin only)
 export const fetchAllDepartments = async (req, res) => {
@@ -11,13 +19,37 @@ export const fetchAllDepartments = async (req, res) => {
             });
         }
 
-        const departments = await getAllDepartments();
+        // Get query parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const search = req.query.search || '';
+        const isActive = req.query.is_active === undefined ? undefined : req.query.is_active === 'true';
+        const sortBy = req.query.sort_by || 'name';
+        const sortOrder = req.query.sort_order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+
+        // Calculate offset
+        const offset = (page - 1) * limit;
+
+        const { departments, total } = await getAllDepartments({
+            limit,
+            offset,
+            search,
+            isActive,
+            sortBy,
+            sortOrder
+        });
         
         res.status(200).json({
             success: true,
             message: 'Departments retrieved successfully',
             data: {
-                departments
+                departments,
+                pagination: {
+                    current_page: page,
+                    total_pages: Math.ceil(total / limit),
+                    total_items: total,
+                    items_per_page: limit
+                }
             }
         });
     } catch (error) {
@@ -51,6 +83,11 @@ export const fetchDepartmentById = async (req, res) => {
             });
         }
 
+        // Convert binary logo data to base64 if it exists
+        if (department.logo) {
+            department.logo = department.logo.toString('base64');
+        }
+
         res.status(200).json({
             success: true,
             message: 'Department retrieved successfully',
@@ -78,7 +115,16 @@ export const createNewDepartment = async (req, res) => {
             });
         }
 
-        const { name } = req.body;
+        const {
+            name,
+            description,
+            contact_email,
+            contact_number,
+            head_user_id,
+            logo,
+            logo_type,
+            is_active
+        } = req.body;
 
         if (!name || name.trim() === '') {
             return res.status(400).json({
@@ -87,7 +133,16 @@ export const createNewDepartment = async (req, res) => {
             });
         }
 
-        const department = await createDepartment(name.trim());
+        const department = await createDepartment({
+            name: name.trim(),
+            description,
+            contact_email,
+            contact_number,
+            head_user_id,
+            logo,
+            logo_type,
+            is_active
+        });
         
         res.status(201).json({
             success: true,
@@ -124,16 +179,34 @@ export const updateExistingDepartment = async (req, res) => {
         }
 
         const departmentId = req.params.id;
-        const { name } = req.body;
+        const {
+            name,
+            description,
+            contact_email,
+            contact_number,
+            head_user_id,
+            logo,
+            logo_type,
+            is_active
+        } = req.body;
 
-        if (!name || name.trim() === '') {
+        if (name && name.trim() === '') {
             return res.status(400).json({
                 success: false,
-                message: 'Department name is required'
+                message: 'Department name cannot be empty'
             });
         }
 
-        const department = await updateDepartment(departmentId, name.trim());
+        const department = await updateDepartment(departmentId, {
+            name: name?.trim(),
+            description,
+            contact_email,
+            contact_number,
+            head_user_id,
+            logo,
+            logo_type,
+            is_active
+        });
         
         if (!department) {
             return res.status(404).json({
@@ -206,5 +279,79 @@ export const deleteExistingDepartment = async (req, res) => {
                 error: error.message
             });
         }
+    }
+};
+
+// Activate department (admin only)
+export const activateExistingDepartment = async (req, res) => {
+    try {
+        // Check if user is admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied. You must be an admin to activate a department.'
+            });
+        }
+
+        const departmentId = req.params.id;
+        const department = await activateDepartment(departmentId);
+        
+        if (!department) {
+            return res.status(404).json({
+                success: false,
+                message: 'Department not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Department activated successfully',
+            data: {
+                department
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error activating department',
+            error: error.message
+        });
+    }
+};
+
+// Deactivate department (admin only)
+export const deactivateExistingDepartment = async (req, res) => {
+    try {
+        // Check if user is admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied. You must be an admin to deactivate a department.'
+            });
+        }
+
+        const departmentId = req.params.id;
+        const department = await deactivateDepartment(departmentId);
+        
+        if (!department) {
+            return res.status(404).json({
+                success: false,
+                message: 'Department not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Department deactivated successfully',
+            data: {
+                department
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error deactivating department',
+            error: error.message
+        });
     }
 };

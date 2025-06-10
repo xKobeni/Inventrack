@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
-import { parseBrowserString, parsePlatformString, formatDateTime } from "../utils/helper";
+import { parseBrowserString, parsePlatformString, formatDateTime } from "../services/helper.js";
 
 const API_URL = 'http://localhost:5001';
 

@@ -2,7 +2,16 @@
 
 CREATE TABLE IF NOT EXISTS departments (
     department_id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    contact_email VARCHAR(100),
+    contact_number VARCHAR(20),
+    head_user_id INTEGER REFERENCES users(user_id),
+    logo BYTEA,
+    logo_type VARCHAR(50),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS users (

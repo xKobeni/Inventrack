@@ -6,6 +6,7 @@ import Dashboard from "./pages/Admin/dashboard"
 import ProfilePage from "./pages/Shared/profilePage"
 import UserManagement from "./pages/Admin/userManagement"
 import AddUser from "./pages/Admin/addUser"
+import DepartmentManagement from "./pages/Admin/DepartmentManagement"
 import Error403 from "./pages/Shared/403Error"
 import Error404 from "./pages/Shared/404Error"
 import Error500 from "./pages/Shared/500Error"
@@ -98,6 +99,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AddUser />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/departments"
+          element={
+            <ProtectedRoute>
+              <DepartmentManagement />
             </ProtectedRoute>
           }
         />

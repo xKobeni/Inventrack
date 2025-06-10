@@ -9,7 +9,8 @@ import {
     fetchUserById,
     deactivateAnyUserAccount,
     activateAnyUserAccount,
-    updateAnyUserProfile
+    updateAnyUserProfile,
+    deleteAnyUserAccount
 } from "../../controllers/userController/user.controller.js";
 import {
     bulkUpdateUsersController,
@@ -44,6 +45,7 @@ router.get("/:id", userIdValidation, auditMiddleware('VIEW_USER'), fetchUserById
 router.put("/:id", userIdValidation, adminUpdateUserValidation, auditMiddleware('UPDATE_USER'), updateAnyUserProfile);
 router.post("/:id/deactivate", userIdValidation, auditMiddleware('DEACTIVATE_USER'), deactivateAnyUserAccount);
 router.post("/:id/activate", userIdValidation, auditMiddleware('ACTIVATE_USER'), activateAnyUserAccount);
+router.delete("/:id", userIdValidation, auditMiddleware('DELETE_USER'), deleteAnyUserAccount);
 
 // Bulk operations (admin only)
 router.put("/bulk/update", bulkUpdateValidation, auditMiddleware('BULK_UPDATE_USERS'), bulkUpdateUsersController);
