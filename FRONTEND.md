@@ -11,12 +11,15 @@ The Inventrack frontend is built using React with Vite as the build tool. It use
 - **React Router DOM** (v7.6.1) - Client-side routing
 - **Zustand** (v5.0.5) - State management
 - **Axios** (v1.9.0) - HTTP client for API requests
+- **Socket.io-client** (v4.7.4) - Real-time communication
 
 ### UI and Styling
 - **Tailwind CSS** (v3.4.17) - Utility-first CSS framework
 - **DaisyUI** (v5.0.40) - Component library for Tailwind CSS
 - **React Hot Toast** (v2.5.2) - Toast notifications
 - **Lucide React** - Icon library
+- **React Hook Form** (v7.50.0) - Form handling
+- **Zod** (v3.22.4) - Schema validation
 
 ### Development Tools
 - **ESLint** (v9.25.0) - Code linting
@@ -33,6 +36,11 @@ frontend/
 │   │   ├── ui/       # Base UI components
 │   │   └── ...       # Other components
 │   ├── pages/        # Page components
+│   │   ├── Admin/    # Admin pages
+│   │   ├── Auth/     # Authentication pages
+│   │   ├── DepartmentRep/ # Department pages
+│   │   ├── GSOStaff/ # GSO staff pages
+│   │   └── Shared/   # Shared pages
 │   ├── hooks/        # Custom React hooks
 │   ├── store/        # Zustand store
 │   ├── utils/        # Utility functions
@@ -66,11 +74,23 @@ The project includes several reusable base components located in `src/components
 - **Table** (`table.jsx`) - Data table component
 - **Modal** (`modal.jsx`) - Modal dialog component
 - **Dropdown** (`dropdown.jsx`) - Dropdown menu component
+- **Toast** (`toast.jsx`) - Notification component
+- **Loading** (`loading.jsx`) - Loading spinner component
+- **ErrorBoundary** (`error-boundary.jsx`) - Error handling component
 
 ### Authentication Components
 - **LoginForm** - Login form component
 - **AuthLayout** - Authentication page layout
 - **ProtectedRoute** - Route protection component
+- **ResetPasswordForm** - Password reset form
+- **PasswordResetForm** - Password reset request form
+
+### Navigation Components
+- **AppSidebar** - Main application sidebar
+- **NavUser** - User navigation menu
+- **NavMain** - Main navigation menu
+- **NavProjects** - Projects navigation menu
+- **TeamSwitcher** - Team switching component
 
 ## Getting Started
 
@@ -122,13 +142,21 @@ npm run lint
 - Client-side routing with React Router
 - Toast notifications for user feedback
 - API integration with Axios
+- Real-time updates with Socket.io
 - Reusable UI components
 - Authentication system
-- Form validation
+- Form validation with Zod
 - Error boundary implementation
 - Loading states and skeletons
 - Responsive layouts
 - Dark mode support
+- Role-based access control
+- User preferences management
+- Session management
+- Department management
+- Inventory tracking
+- Procurement system
+- Incident reporting
 
 ## Best Practices
 1. Use functional components with hooks
@@ -143,6 +171,14 @@ npm run lint
 10. Implement proper loading states
 11. Use React Context for global state
 12. Follow accessibility guidelines
+13. Implement proper form validation
+14. Use proper state management
+15. Implement proper error boundaries
+16. Use proper routing guards
+17. Implement proper session management
+18. Use proper API error handling
+19. Implement proper real-time updates
+20. Use proper caching strategies
 
 ## Available Scripts
 - `npm run dev` - Start development server
@@ -160,6 +196,7 @@ npm run lint
 - react-router-dom: ^7.6.1
 - zustand: ^5.0.5
 - axios: ^1.9.0
+- socket.io-client: ^4.7.4
 - react-hot-toast: ^2.5.2
 - lucide-react: ^0.344.0
 - @hookform/resolvers: ^3.3.4
@@ -198,4 +235,8 @@ Common issues and their solutions:
 3. For styling issues, verify Tailwind CSS configuration
 4. For component issues, check the component documentation
 5. For test failures, check the test configuration
-6. For TypeScript errors, verify type definitions 
+6. For TypeScript errors, verify type definitions
+7. For real-time issues, check Socket.io configuration
+8. For state management issues, check Zustand store
+9. For routing issues, check React Router configuration
+10. For API issues, check Axios configuration 

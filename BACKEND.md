@@ -8,6 +8,7 @@ The Inventrack backend is a Node.js/Express.js application that provides a RESTf
 - Express.js
 - PostgreSQL (with Neon Serverless)
 - JWT Authentication
+- Socket.io for real-time features
 - Various security middleware (helmet, cors, rate limiting)
 
 ## Project Structure
@@ -16,9 +17,23 @@ backend/
 ├── app.js              # Main application setup
 ├── server.js           # Server entry point
 ├── routes/             # API route definitions
+│   ├── auth.routes.js
+│   ├── userRoutes/
+│   ├── department.routes.js
+│   ├── inventory.routes.js
+│   ├── procurement.routes.js
+│   ├── incidentReports.routes.js
+│   ├── userPreferences.routes.js
+│   └── session.routes.js
 ├── controllers/        # Request handlers
 ├── services/          # Business logic layer
 ├── models/            # Database models
+│   ├── authModels/
+│   ├── userModels/
+│   ├── department.models.js
+│   ├── inventory.models.js
+│   ├── procurement.model.js
+│   └── incidentReports.js
 ├── middleware/        # Custom middleware
 ├── utils/            # Utility functions
 ├── config/           # Configuration files
@@ -31,6 +46,8 @@ backend/
 - POST `/auth/login` - User login
 - POST `/auth/register` - User registration
 - POST `/auth/logout` - User logout
+- POST `/auth/reset-password` - Request password reset
+- POST `/auth/reset-password/:token` - Reset password
 
 ### Users (`/users`)
 - GET `/users` - Get all users
@@ -38,6 +55,10 @@ backend/
 - POST `/users` - Create new user
 - PUT `/users/:id` - Update user
 - DELETE `/users/:id` - Delete user
+- GET `/users/profile/me` - Get current user profile
+- PUT `/users/profile/me` - Update current user profile
+- POST `/users/profile/me/deactivate` - Deactivate current user
+- POST `/users/profile/me/activate` - Activate current user
 
 ### Departments (`/departments`)
 - GET `/departments` - Get all departments
@@ -60,6 +81,21 @@ backend/
 - PUT `/procurement/:id` - Update procurement record
 - DELETE `/procurement/:id` - Delete procurement record
 
+### Incident Reports (`/incident-reports`)
+- GET `/incident-reports` - Get all incident reports
+- GET `/incident-reports/:id` - Get incident report by ID
+- POST `/incident-reports` - Create new incident report
+- PUT `/incident-reports/:id` - Update incident report
+- DELETE `/incident-reports/:id` - Delete incident report
+
+### User Preferences (`/preferences`)
+- GET `/preferences` - Get user preferences
+- PUT `/preferences` - Update user preferences
+
+### Session Management (`/sessions`)
+- GET `/sessions` - Get active sessions
+- DELETE `/sessions/:id` - Terminate session
+
 ## Security Features
 1. Rate Limiting
    - 100 requests per 15 minutes per IP
@@ -81,6 +117,21 @@ backend/
    - Request/response monitoring
    - Custom log format
 
+5. JWT Authentication
+   - Secure token-based authentication
+   - Token refresh mechanism
+   - Role-based access control
+
+6. Password Security
+   - Bcrypt password hashing
+   - Password strength requirements
+   - Password reset functionality
+
+7. Session Management
+   - Multiple device support
+   - Session tracking
+   - Session termination
+
 ## Error Handling
 The application implements a global error handling middleware that:
 - Logs errors to console
@@ -95,6 +146,9 @@ Required environment variables:
 - `DATABASE_URL` - PostgreSQL connection string
 - `JWT_SECRET` - Secret for JWT token generation
 - `NODE_ENV` - Environment (development/production)
+- `CORS_ORIGIN` - Allowed CORS origins
+- `RATE_LIMIT_WINDOW` - Rate limit window in minutes
+- `RATE_LIMIT_MAX` - Maximum requests per window
 
 ## Getting Started
 1. Install dependencies:
@@ -121,6 +175,12 @@ Required environment variables:
 7. Input validation using express-validator
 8. Database connection pooling
 9. Transaction support for critical operations
+10. Real-time updates using Socket.io
+11. Proper session management
+12. User preferences handling
+13. Role-based access control
+14. Comprehensive logging
+15. API documentation
 
 ## API Response Format
 All API responses follow a consistent format:
@@ -131,4 +191,40 @@ All API responses follow a consistent format:
     "error": "Error name", // For error responses
     "message": "Response message"
 }
-``` 
+```
+
+## Real-time Features
+The application uses Socket.io for real-time features:
+- Inventory updates
+- Procurement status changes
+- Incident report notifications
+- User presence tracking
+- Department updates
+
+## Database Schema
+The application uses PostgreSQL with the following main tables:
+- users
+- departments
+- inventory_items
+- procurement_requests
+- incident_reports
+- user_preferences
+- sessions
+- request_items
+- audit_logs
+
+## Testing
+The application includes comprehensive testing:
+- Unit tests for services and utilities
+- Integration tests for API endpoints
+- Database tests for models
+- Security tests for authentication
+- Performance tests for critical operations
+
+## Monitoring
+The application includes monitoring features:
+- Request logging
+- Error tracking
+- Performance monitoring
+- Security monitoring
+- Database monitoring 

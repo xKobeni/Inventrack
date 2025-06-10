@@ -40,6 +40,48 @@ This document provides information about the libraries used in the Inventrack ba
 - **Purpose**: Prevents abuse of the API by limiting repeated requests from a single IP address
 - **Documentation**: [express-rate-limit Documentation](https://github.com/express-rate-limit/express-rate-limit)
 
+### Socket.io
+- **Version**: Latest
+- **Description**: Real-time, bidirectional and event-based communication
+- **Purpose**: Enables real-time features like live updates and notifications
+- **Documentation**: [Socket.io Documentation](https://socket.io/)
+
+### jsonwebtoken
+- **Version**: Latest
+- **Description**: JSON Web Token implementation
+- **Purpose**: Handles authentication and authorization using JWT tokens
+- **Documentation**: [jsonwebtoken Documentation](https://github.com/auth0/node-jsonwebtoken)
+
+### bcrypt
+- **Version**: Latest
+- **Description**: Password hashing library
+- **Purpose**: Securely hashes passwords before storing them in the database
+- **Documentation**: [bcrypt Documentation](https://github.com/dcodeIO/bcrypt.js)
+
+### express-validator
+- **Version**: Latest
+- **Description**: Input validation and sanitization
+- **Purpose**: Validates and sanitizes request data
+- **Documentation**: [express-validator Documentation](https://express-validator.github.io/)
+
+### pg (node-postgres)
+- **Version**: Latest
+- **Description**: PostgreSQL client for Node.js
+- **Purpose**: Database connection and query execution
+- **Documentation**: [node-postgres Documentation](https://node-postgres.com/)
+
+### winston
+- **Version**: Latest
+- **Description**: Logging library
+- **Purpose**: Advanced logging with multiple transports
+- **Documentation**: [winston Documentation](https://github.com/winstonjs/winston)
+
+### jest
+- **Version**: Latest
+- **Description**: JavaScript testing framework
+- **Purpose**: Unit and integration testing
+- **Documentation**: [Jest Documentation](https://jestjs.io/)
+
 ## Usage in the Application
 
 The libraries are configured in `app.js` as follows:
@@ -50,6 +92,13 @@ The libraries are configured in `app.js` as follows:
 4. **Morgan**: Configured in "dev" mode for development logging
 5. **dotenv**: Loaded at application startup to configure environment variables
 6. **express-rate-limit**: Configured to limit requests to 100 per IP address per 15 minutes
+7. **Socket.io**: Configured for real-time features
+8. **jsonwebtoken**: Used for authentication
+9. **bcrypt**: Used for password hashing
+10. **express-validator**: Used for input validation
+11. **pg**: Used for database operations
+12. **winston**: Used for logging
+13. **jest**: Used for testing
 
 ## Security Considerations
 
@@ -57,6 +106,10 @@ The libraries are configured in `app.js` as follows:
 - Rate limiting is implemented to prevent DDoS attacks
 - CORS is configured to control which origins can access the API
 - Environment variables are used for sensitive configuration
+- JWT tokens are used for secure authentication
+- Passwords are hashed using bcrypt
+- Input validation is performed using express-validator
+- Real-time features are secured using Socket.io authentication
 
 ## Best Practices
 
@@ -64,4 +117,14 @@ The libraries are configured in `app.js` as follows:
 2. Regularly check for security vulnerabilities using `npm audit`
 3. Use environment variables for sensitive configuration
 4. Monitor rate limiting logs for potential abuse
-5. Keep the Morgan logging level appropriate for the environment (dev/prod) 
+5. Keep the Morgan logging level appropriate for the environment (dev/prod)
+6. Implement proper error handling for all middleware
+7. Use connection pooling for database operations
+8. Implement proper session management
+9. Use proper validation for all input data
+10. Implement proper logging for debugging and monitoring
+11. Use proper testing for all features
+12. Implement proper security measures
+13. Use proper documentation
+14. Implement proper error handling
+15. Use proper monitoring 

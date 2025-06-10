@@ -20,6 +20,12 @@ Inventrack is a modern inventory management system built with Node.js, Express, 
 - 🧪 Comprehensive testing suite
 - 🌙 Dark mode support
 - ♿ Accessibility features
+- 📋 Procurement management system
+- 🏢 Department management
+- 📝 Incident reporting system
+- 👥 User preferences and settings
+- 🔄 Session management
+- 📊 Advanced reporting and analytics
 
 ## Tech Stack
 
@@ -35,6 +41,7 @@ Inventrack is a modern inventory management system built with Node.js, Express, 
 - Express Rate Limit for API protection
 - Express Validator for input validation
 - Jest for testing
+- WebSocket for real-time features
 
 ### Frontend
 - React 19.1.0
@@ -51,6 +58,7 @@ Inventrack is a modern inventory management system built with Node.js, Express, 
 - Jest and React Testing Library for testing
 - React Hook Form for form handling
 - Zod for schema validation
+- Socket.io-client for real-time features
 
 ## Prerequisites
 
@@ -153,6 +161,11 @@ inventrack/
 │   │   │   ├── ui/    # Base UI components
 │   │   │   └── ...    # Other components
 │   │   ├── pages/     # Page components
+│   │   │   ├── Admin/ # Admin pages
+│   │   │   ├── Auth/  # Authentication pages
+│   │   │   ├── DepartmentRep/ # Department pages
+│   │   │   ├── GSOStaff/ # GSO staff pages
+│   │   │   └── Shared/ # Shared pages
 │   │   ├── hooks/     # Custom React hooks
 │   │   ├── store/     # Zustand store
 │   │   ├── utils/     # Utility functions

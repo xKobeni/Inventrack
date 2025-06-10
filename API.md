@@ -473,6 +473,166 @@ Response:
 }
 ```
 
+### Incident Reports
+
+#### Get All Incident Reports
+```http
+GET /incident-reports
+```
+
+Query Parameters:
+- `page` (optional): Page number for pagination
+- `limit` (optional): Number of items per page
+- `status` (optional): Filter by status
+- `department` (optional): Filter by department
+- `dateFrom` (optional): Filter by start date
+- `dateTo` (optional): Filter by end date
+
+Response:
+```json
+{
+    "success": true,
+    "data": {
+        "reports": [
+            {
+                "id": "string",
+                "title": "string",
+                "description": "string",
+                "department": "string",
+                "reportedBy": "string",
+                "status": "string",
+                "createdAt": "date",
+                "updatedAt": "date"
+            }
+        ],
+        "pagination": {
+            "total": "number",
+            "page": "number",
+            "limit": "number",
+            "pages": "number"
+        }
+    }
+}
+```
+
+#### Create Incident Report
+```http
+POST /incident-reports
+```
+
+Request Body:
+```json
+{
+    "title": "string",
+    "description": "string",
+    "department": "string",
+    "priority": "string" // high, medium, low
+}
+```
+
+Response:
+```json
+{
+    "success": true,
+    "message": "Incident report created successfully",
+    "data": {
+        "id": "string",
+        "title": "string",
+        "description": "string",
+        "department": "string",
+        "reportedBy": "string",
+        "status": "pending",
+        "createdAt": "date"
+    }
+}
+```
+
+### User Preferences
+
+#### Get User Preferences
+```http
+GET /preferences
+```
+
+Response:
+```json
+{
+    "success": true,
+    "data": {
+        "theme": "string",
+        "notifications": "boolean",
+        "language": "string",
+        "timezone": "string"
+    }
+}
+```
+
+#### Update User Preferences
+```http
+PUT /preferences
+```
+
+Request Body:
+```json
+{
+    "theme": "string",
+    "notifications": "boolean",
+    "language": "string",
+    "timezone": "string"
+}
+```
+
+Response:
+```json
+{
+    "success": true,
+    "message": "Preferences updated successfully",
+    "data": {
+        "theme": "string",
+        "notifications": "boolean",
+        "language": "string",
+        "timezone": "string"
+    }
+}
+```
+
+### Session Management
+
+#### Get Active Sessions
+```http
+GET /sessions
+```
+
+Response:
+```json
+{
+    "success": true,
+    "data": {
+        "sessions": [
+            {
+                "id": "string",
+                "device": "string",
+                "ip": "string",
+                "lastActive": "date"
+            }
+        ]
+    }
+}
+```
+
+#### Terminate Session
+```http
+DELETE /sessions/:id
+```
+
+Response:
+```json
+{
+    "success": true,
+    "message": "Session terminated successfully"
+}
+```
+
 ## Error Responses
 
 All endpoints may return the following error responses:
