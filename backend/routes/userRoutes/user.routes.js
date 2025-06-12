@@ -10,7 +10,9 @@ import {
     deactivateAnyUserAccount,
     activateAnyUserAccount,
     updateAnyUserProfile,
-    deleteAnyUserAccount
+    deleteAnyUserAccount,
+    softDeleteUserAccount,
+    restoreUserAccount
 } from "../../controllers/userController/user.controller.js";
 import {
     bulkUpdateUsersController,
@@ -40,12 +42,14 @@ router.post("/profile/deactivate", auditMiddleware('DEACTIVATE_PROFILE'), deacti
 router.post("/profile/activate", auditMiddleware('ACTIVATE_PROFILE'), activateUserAccount);
 
 // Admin only routes
-router.get("/", auditMiddleware('VIEW_ALL_USERS'), fetchAllUsers);
+router.get("/", fetchAllUsers);
 router.get("/:id", userIdValidation, auditMiddleware('VIEW_USER'), fetchUserById);
 router.put("/:id", userIdValidation, adminUpdateUserValidation, auditMiddleware('UPDATE_USER'), updateAnyUserProfile);
 router.post("/:id/deactivate", userIdValidation, auditMiddleware('DEACTIVATE_USER'), deactivateAnyUserAccount);
 router.post("/:id/activate", userIdValidation, auditMiddleware('ACTIVATE_USER'), activateAnyUserAccount);
 router.delete("/:id", userIdValidation, auditMiddleware('DELETE_USER'), deleteAnyUserAccount);
+router.post("/:id/soft-delete", userIdValidation, auditMiddleware('SOFT_DELETE_USER'), softDeleteUserAccount);
+router.post("/:id/restore", userIdValidation, auditMiddleware('RESTORE_USER'), restoreUserAccount);
 
 // Bulk operations (admin only)
 router.put("/bulk/update", bulkUpdateValidation, auditMiddleware('BULK_UPDATE_USERS'), bulkUpdateUsersController);

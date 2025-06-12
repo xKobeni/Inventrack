@@ -454,3 +454,19 @@ export const bulkUpdateValidation = [
         .withMessage('is_active must be a boolean'),
     validate
 ];
+
+// Email verification request validation
+export const emailVerificationRequestValidation = [
+    body('email')
+        .isEmail()
+        .withMessage('Please enter a valid email'),
+    validate
+];
+
+// Email verification confirmation validation
+export const emailVerificationConfirmValidation = [
+    body('token')
+        .notEmpty()
+        .withMessage('Verification token is required'),
+    validate
+];

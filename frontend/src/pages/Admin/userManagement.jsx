@@ -69,6 +69,7 @@ export default function UserManagement() {
     pagination,
     fetchUsers,
     deleteUser,
+    restoreUser,
     activateUser,
     deactivateUser,
     editUser,
@@ -110,6 +111,7 @@ export default function UserManagement() {
         search: searchTerm,
         role: roleFilter === "all" ? undefined : roleFilter,
         is_active: statusFilter === "active" ? true : statusFilter === "inactive" ? false : undefined,
+        is_deleted: statusFilter === "deleted" ? true : undefined,
         sort_by: sortBy,
         sort_order: sortOrder,
       });
@@ -249,6 +251,24 @@ export default function UserManagement() {
     setIsViewDialogOpen(true);
   };
 
+  const handleRestore = async (userId) => {
+    try {
+      await restoreUser(userId);
+      toast({
+        title: "Success",
+        description: "User restored successfully",
+        variant: "success",
+      });
+      loadUsers();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to restore user",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -329,6 +349,7 @@ export default function UserManagement() {
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="deleted">Deleted</SelectItem>
                     </SelectContent>
                   </Select>
                   {/* Page size selector */}
@@ -373,13 +394,13 @@ export default function UserManagement() {
                     <TableBody>
                       {isLoading ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center">
+                          <TableCell colSpan={7} className="text-center">
                             Loading...
                           </TableCell>
                         </TableRow>
                       ) : users.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center">
+                          <TableCell colSpan={7} className="text-center">
                             No users found
                           </TableCell>
                         </TableRow>
@@ -392,12 +413,14 @@ export default function UserManagement() {
                             <TableCell>
                               <span
                                 className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-                                  user.is_active
+                                  user.is_deleted
+                                    ? "bg-gray-50 text-gray-700 ring-1 ring-inset ring-gray-600/20"
+                                    : user.is_active
                                     ? "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20"
                                     : "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20"
                                 }`}
                               >
-                                {user.is_active ? "Active" : "Inactive"}
+                                {user.is_deleted ? "Deleted" : user.is_active ? "Active" : "Inactive"}
                               </span>
                             </TableCell>
                             <TableCell>
@@ -420,25 +443,37 @@ export default function UserManagement() {
                                   <DropdownMenuItem onClick={() => handleViewClick(user)}>
                                     <Eye className="h-4 w-4 mr-2 text-blue-600" /> View
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleEdit(user)}>
-                                    <Pencil className="h-4 w-4 mr-2 text-muted-foreground" /> Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => handleStatusChange(user.id, !user.is_active)}
-                                  >
-                                    {user.is_active ? (
-                                      <PowerOff className="h-4 w-4 mr-2 text-yellow-600" />
-                                    ) : (
-                                      <Power className="h-4 w-4 mr-2 text-green-600" />
-                                    )}
-                                    {user.is_active ? "Deactivate" : "Activate"}
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => handleDeleteClick(user)}
-                                    className="text-red-600"
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2 text-red-600" /> Delete
-                                  </DropdownMenuItem>
+                                  {!user.is_deleted && (
+                                    <>
+                                      <DropdownMenuItem onClick={() => handleEdit(user)}>
+                                        <Pencil className="h-4 w-4 mr-2 text-muted-foreground" /> Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() => handleStatusChange(user.id, !user.is_active)}
+                                      >
+                                        {user.is_active ? (
+                                          <PowerOff className="h-4 w-4 mr-2 text-yellow-600" />
+                                        ) : (
+                                          <Power className="h-4 w-4 mr-2 text-green-600" />
+                                        )}
+                                        {user.is_active ? "Deactivate" : "Activate"}
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() => handleDeleteClick(user)}
+                                        className="text-red-600"
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-2 text-red-600" /> Delete
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
+                                  {user.is_deleted && (
+                                    <DropdownMenuItem
+                                      onClick={() => handleRestore(user.id)}
+                                      className="text-green-600"
+                                    >
+                                      <RefreshCw className="h-4 w-4 mr-2 text-green-600" /> Restore
+                                    </DropdownMenuItem>
+                                  )}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </TableCell>
@@ -586,7 +621,7 @@ export default function UserManagement() {
             <DialogHeader>
               <DialogTitle>Delete User</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete <b>{userToDelete?.name}</b>? This action cannot be undone.
+                Are you sure you want to delete <b>{userToDelete?.name}</b>? This will soft delete the user and they can be restored later.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -635,11 +670,13 @@ export default function UserManagement() {
                   <div className="text-sm text-blue-100">{userToView?.email}</div>
                   <div className="mt-2">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                      userToView?.is_active
+                      userToView?.is_deleted
+                        ? "bg-gray-100 text-gray-800"
+                        : userToView?.is_active
                         ? "bg-green-100 text-green-800"
                         : "bg-red-100 text-red-800"
                     }`}>
-                      {userToView?.is_active ? "Active" : "Inactive"}
+                      {userToView?.is_deleted ? "Deleted" : userToView?.is_active ? "Active" : "Inactive"}
                     </span>
                   </div>
                 </div>
@@ -686,11 +723,13 @@ export default function UserManagement() {
                       <div>
                         <span className="block text-xs text-gray-500">Account Status</span>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          userToView?.is_active
+                          userToView?.is_deleted
+                            ? "bg-gray-100 text-gray-800"
+                            : userToView?.is_active
                             ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
                         }`}>
-                          {userToView?.is_active ? "Active" : "Inactive"}
+                          {userToView?.is_deleted ? "Deleted" : userToView?.is_active ? "Active" : "Inactive"}
                         </span>
                       </div>
                       <div>
@@ -703,6 +742,16 @@ export default function UserManagement() {
                           {userToView?.email_verified ? "Verified" : "Not Verified"}
                         </span>
                       </div>
+                      {userToView?.is_deleted && (
+                        <div>
+                          <span className="block text-xs text-gray-500">Deleted At</span>
+                          <span className="font-medium">
+                            {userToView?.deleted_at
+                              ? format(new Date(userToView.deleted_at), "PP p")
+                              : "N/A"}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -711,49 +760,66 @@ export default function UserManagement() {
                 <div className="mt-6 pt-6 border-t">
                   <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Quick Actions</h3>
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setIsViewDialogOpen(false);
-                        handleEdit(userToView);
-                      }}
-                    >
-                      <Pencil className="h-4 w-4 mr-2" />
-                      Edit User
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setIsViewDialogOpen(false);
-                        handleStatusChange(userToView.id, !userToView.is_active);
-                      }}
-                    >
-                      {userToView?.is_active ? (
-                        <>
-                          <PowerOff className="h-4 w-4 mr-2" />
-                          Deactivate
-                        </>
-                      ) : (
-                        <>
-                          <Power className="h-4 w-4 mr-2" />
-                          Activate
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-red-600 hover:text-red-700"
-                      onClick={() => {
-                        setIsViewDialogOpen(false);
-                        handleDeleteClick(userToView);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete User
-                    </Button>
+                    {!userToView?.is_deleted ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setIsViewDialogOpen(false);
+                            handleEdit(userToView);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit User
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setIsViewDialogOpen(false);
+                            handleStatusChange(userToView.id, !userToView.is_active);
+                          }}
+                        >
+                          {userToView?.is_active ? (
+                            <>
+                              <PowerOff className="h-4 w-4 mr-2" />
+                              Deactivate
+                            </>
+                          ) : (
+                            <>
+                              <Power className="h-4 w-4 mr-2" />
+                              Activate
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => {
+                            setIsViewDialogOpen(false);
+                            handleDeleteClick(userToView);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete User
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-green-600 hover:text-green-700"
+                        onClick={() => {
+                          setIsViewDialogOpen(false);
+                          handleRestore(userToView.id);
+                        }}
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Restore User
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

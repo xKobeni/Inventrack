@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS users (
     profile_picture BYTEA,
     profile_picture_type VARCHAR(50),
     is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_verified BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS access_permissions (
@@ -145,10 +146,22 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     CONSTRAINT valid_expiration CHECK (expires_at > created_at)
 );
 
+CREATE TABLE IF NOT EXISTS email_verification_tokens (
+    token_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+    token VARCHAR(255) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    verified_at TIMESTAMP,
+    CONSTRAINT valid_expiration CHECK (expires_at > created_at)
+);
+
 -- Add indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(token);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_token ON email_verification_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_user_id ON email_verification_tokens(user_id);
 
 -- Create a function to clean up expired sessions
 CREATE OR REPLACE FUNCTION cleanup_expired_sessions()

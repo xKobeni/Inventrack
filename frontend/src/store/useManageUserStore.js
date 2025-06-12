@@ -105,14 +105,36 @@ const useManageUserStore = create((set, get) => ({
   deleteUser: async (userId) => {
     set({ isLoading: true, error: null });
     try {
-      await api.delete(`/users/${userId}`);
+      const { data } = await api.post(`/users/${userId}/soft-delete`);
       const currentUsers = get().users;
       set({ 
-        users: currentUsers.filter(user => user.id !== userId),
+        users: currentUsers.map(user => 
+          user.id === userId ? { ...user, is_deleted: true, deleted_at: new Date().toISOString() } : user
+        ),
         isLoading: false 
       });
+      return data;
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to delete user';
+      set({ error: errorMessage, isLoading: false });
+      throw new Error(errorMessage);
+    }
+  },
+
+  restoreUser: async (userId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await api.post(`/users/${userId}/restore`);
+      const currentUsers = get().users;
+      set({ 
+        users: currentUsers.map(user => 
+          user.id === userId ? { ...user, is_deleted: false, deleted_at: null } : user
+        ),
+        isLoading: false 
+      });
+      return data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to restore user';
       set({ error: errorMessage, isLoading: false });
       throw new Error(errorMessage);
     }

@@ -14,6 +14,7 @@ import {
     departmentUpdateValidation, 
     departmentIdValidation 
 } from '../middleware/validation.js';
+import { auditMiddleware } from "../middleware/audit.middleware.js";
 
 const router = Router();
 
@@ -27,19 +28,18 @@ router.get('/', fetchAllDepartments);
 router.get('/:id', departmentIdValidation, fetchDepartmentById);
 
 // Create new department (admin only)
-router.post('/', departmentValidation, createNewDepartment);
+router.post('/', departmentValidation, auditMiddleware('CREATE_DEPARTMENT'), createNewDepartment);
 
 // Update department (admin only)
-router.put('/:id', [...departmentIdValidation, ...departmentUpdateValidation], updateExistingDepartment);
+router.put('/:id', [...departmentIdValidation, ...departmentUpdateValidation], auditMiddleware('UPDATE_DEPARTMENT'), updateExistingDepartment);
 
 // Delete department (admin only)
-router.delete('/:id', departmentIdValidation, deleteExistingDepartment);
+router.delete('/:id', departmentIdValidation, auditMiddleware('DELETE_DEPARTMENT'), deleteExistingDepartment);
 
 // Activate department (admin only)
-router.put('/:id/activate', departmentIdValidation, activateExistingDepartment);
+router.put('/:id/activate', departmentIdValidation, auditMiddleware('ACTIVATE_DEPARTMENT'), activateExistingDepartment);
 
 // Deactivate department (admin only)
-router.put('/:id/deactivate', departmentIdValidation, deactivateExistingDepartment);
-
+router.put('/:id/deactivate', departmentIdValidation, auditMiddleware('DEACTIVATE_DEPARTMENT'), deactivateExistingDepartment);
 
 export default router;

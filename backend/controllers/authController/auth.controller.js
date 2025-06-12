@@ -1,31 +1,21 @@
 import bcrypt from 'bcrypt';
-import { generateToken } from '../../utils/jwt.js';
-import { getUserByEmail, createUser } from '../../models/userModels/user.models.js';
-import { addToBlacklist } from '../../utils/tokenBlacklist.js';
+import jwt from 'jsonwebtoken';
 import { createSession, deleteSession, findSimilarSession, updateSessionActivity, updateSessionTokenAndActivity, deleteSessionByDevice } from '../../models/authModels/session.models.js';
+import { createVerificationToken } from '../../models/authModels/emailVerification.models.js';
+import { sendVerificationEmail } from '../../services/emailServices.js';
+import { addToBlacklist } from '../../utils/tokenBlacklist.js';
+import { getUserByEmail, createUser } from '../../models/userModels/user.models.js';
 
 // Helper to parse browser and platform from user-agent
-function parseUserAgent(ua) {
-    let browser = 'Unknown';
-    let platform = 'Unknown';
-    if (!ua) return { browser, platform };
-    ua = ua.toLowerCase();
-    // Browser
-    if (ua.includes('edg/')) browser = 'Microsoft Edge';
-    else if (ua.includes('chrome/')) browser = 'Chromium';
-    else if (ua.includes('opera/')) browser = 'Opera';
-    else if (ua.includes('brave/')) browser = 'Brave';
-    else if (ua.includes('opera gx/')) browser = 'Opera GX';
-    else if (ua.includes('firefox/')) browser = 'Firefox';
-    else if (ua.includes('safari/') && !ua.includes('chrome/')) browser = 'Safari';
-    // Platform
-    if (ua.includes('windows')) platform = 'Windows';
-    else if (ua.includes('macintosh') || ua.includes('mac os')) platform = 'MacOS';
-    else if (ua.includes('linux')) platform = 'Linux';
-    else if (ua.includes('android')) platform = 'Android';
-    else if (ua.includes('iphone') || ua.includes('ipad')) platform = 'iOS';
-    return { browser, platform };
-}
+const parseUserAgent = (userAgent) => {
+    const browser = userAgent.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+    const platform = userAgent.match(/(windows|mac|linux|android|ios)/i) || [];
+    return {
+        browser: browser[1] || 'unknown',
+        browserVersion: browser[2] || 'unknown',
+        platform: platform[1] || 'unknown'
+    };
+};
 
 // Clean sec-ch-ua and sec-ch-ua-platform values
 function cleanBrowserString(browserStr) {
@@ -56,11 +46,35 @@ const login = async (req, res) => {
             return res.status(401).json({ message: 'Invalid password' });
         }
 
+        if (!user.is_verified) {
+            try {
+                // Generate a new verification token
+                const token = await createVerificationToken(user.user_id);
+                // Send verification email
+                await sendVerificationEmail(user.email, token);
+                
+                return res.status(403).json({ 
+                    message: 'Please verify your email before logging in',
+                    requiresVerification: true,
+                    email: user.email
+                });
+            } catch (emailError) {
+                console.error('Error sending verification email:', emailError);
+                // Still return 403 but with a different message
+                return res.status(403).json({ 
+                    message: 'Please verify your email before logging in. Contact support if you need a new verification email.',
+                    requiresVerification: true,
+                    email: user.email,
+                    emailError: true
+                });
+            }
+        }
+
         // Generate token with only id and role
-        const token = generateToken({
+        const token = jwt.sign({
             id: user.user_id,
             role: user.role
-        });
+        }, process.env.JWT_SECRET, { expiresIn: '1h' });
         
         // Robust device info extraction
         const ua = req.headers['user-agent'] || '';
@@ -114,26 +128,40 @@ const login = async (req, res) => {
                 profile_picture_type: user.profile_picture_type,
                 department_id: user.department_id,
                 department_name: user.department_name || null,
+                is_verified: user.is_verified
             },
         });
     } catch (error) {
         console.error('Error during login:', error);
-        return res.status(500).json({ message: 'Internal server error: ' + error.message });
+        return res.status(500).json({ 
+            message: 'Internal server error',
+            error: error.message 
+        });
     }
 }
 
 const registerUser = async (req, res) => {
-    const { name, email, password, role, department_id } = req.body;
-
     try {
-        const existingUser = await getUserByEmail(email);
-        if (existingUser) {
+        const { name, email, password, role, department_id } = req.body;
+
+        // Check if user already exists
+        const userExists = await getUserByEmail(email);
+
+        if (userExists) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Create user
         const newUser = { name, email, password: hashedPassword, role, department_id };
         const createdUser = await createUser(newUser);
+
+        // Generate verification token and send verification email
+        const token = await createVerificationToken(createdUser.user_id);
+        await sendVerificationEmail(createdUser.email, token);
 
         // Convert profile_picture buffer to base64 data URL if it exists
         let profilePicture = null;
@@ -142,9 +170,10 @@ const registerUser = async (req, res) => {
         }
 
         return res.status(201).json({
-            message: 'User registered successfully',
+            message: 'User registered successfully. Please check your email to verify your account.',
             user: {
-                id: createdUser.id,
+                id: createdUser.user_id,
+                name: createdUser.name,
                 email: createdUser.email,
                 role: createdUser.role,
                 profile_picture: profilePicture,
@@ -153,10 +182,10 @@ const registerUser = async (req, res) => {
             },
         });
     } catch (error) {
-        console.error('Error during registration:', error);
-        return res.status(500).json({ message: 'Internal server error' + error.message });
+        console.error('Error registering user:', error);
+        res.status(500).json({ message: 'Error registering user' });
     }
-}
+};
 
 const logout = async (req, res) => {
     try {
@@ -190,7 +219,7 @@ const logout = async (req, res) => {
         const deviceInfo = { userAgent: ua, platform, browser };
 
         // Delete all sessions for this device/browser
-        await deleteSessionByDevice(user.id, deviceInfo);
+        await deleteSessionByDevice(user.user_id, deviceInfo);
 
         // Add token to blacklist
         addToBlacklist(token);
@@ -203,4 +232,4 @@ const logout = async (req, res) => {
 }
 
 
-export { login, registerUser, logout };
+export { login, registerUser, logout};

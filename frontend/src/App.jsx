@@ -16,6 +16,7 @@ import ErrorBoundary from "./components/ErrorBoundary"
 import { useEffect } from "react"
 import { generateCSPHeader } from "./utils/csp"
 import SecurityTests from "./pages/Admin/securityTests"
+import EmailVerification from "./pages/Auth/EmailVerification"
 
 function App() {
   // Set security headers
@@ -62,6 +63,7 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<EmailVerification />} />
         <Route
           path="/dashboard"
           element={

@@ -24,7 +24,7 @@ const getUserById = async (userId) => {
     return rows[0]; // Return the user found
 }
 
-const getAllUsers = async ({ limit, offset, search, role, isActive, sortBy, sortOrder }) => {
+const getAllUsers = async ({ limit, offset, search, role, isActive, isDeleted, sortBy, sortOrder }) => {
     let query = 'SELECT u.*, d.name as department_name FROM users u LEFT JOIN departments d ON u.department_id = d.department_id WHERE 1=1';
     const values = [];
     let paramCount = 1;
@@ -47,6 +47,13 @@ const getAllUsers = async ({ limit, offset, search, role, isActive, sortBy, sort
     if (isActive !== undefined) {
         query += ` AND u.is_active = $${paramCount}`;
         values.push(isActive === 'true');
+        paramCount++;
+    }
+
+    // Add deleted status filter
+    if (isDeleted !== undefined) {
+        query += ` AND u.is_deleted = $${paramCount}`;
+        values.push(isDeleted === 'true');
         paramCount++;
     }
 
@@ -230,6 +237,30 @@ const bulkDeactivateUsers = async (userIds) => {
     }
 };
 
+const softDeleteUser = async (userId) => {
+    const query = `
+        UPDATE users 
+        SET is_deleted = true, 
+            deleted_at = CURRENT_TIMESTAMP 
+        WHERE user_id = $1 
+        RETURNING *`;
+    const values = [userId];
+    const { rows } = await pool.query(query, values);
+    return rows[0]; // Return the soft deleted user
+}
+
+const restoreUser = async (userId) => {
+    const query = `
+        UPDATE users 
+        SET is_deleted = false, 
+            deleted_at = NULL 
+        WHERE user_id = $1 
+        RETURNING *`;
+    const values = [userId];
+    const { rows } = await pool.query(query, values);
+    return rows[0]; // Return the restored user
+}
+
 export { 
     getUserByEmail, 
     createUser, 
@@ -242,6 +273,8 @@ export {
     bulkUpdateUsers,
     bulkDeleteUsers,
     bulkActivateUsers,
-    bulkDeactivateUsers
+    bulkDeactivateUsers,
+    softDeleteUser,
+    restoreUser
 };
 // This module handles user-related database operations, such as fetching a user by email and creating a new user.

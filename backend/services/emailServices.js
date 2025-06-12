@@ -1,7 +1,9 @@
 import SibApiV3Sdk from 'sib-api-v3-sdk';
-import dotenv from 'dotenv';
 
-dotenv.config();
+// Debug: Check if API key exists
+if (!process.env.BREVO_API_KEY) {
+    console.error('BREVO_API_KEY is not set in environment variables');
+}
 
 // Configure API key authorization
 const defaultClient = SibApiV3Sdk.ApiClient.instance;
@@ -14,8 +16,8 @@ const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 // Email templates
 const EMAIL_TEMPLATES = {
     WELCOME: 1, // Replace with your actual template ID
-    PASSWORD_RESET: 2, // Replace with your actual template ID
-    EMAIL_VERIFICATION: 3, // Replace with your actual template ID
+    PASSWORD_RESET: 3, // Replace with your actual template ID
+    EMAIL_VERIFICATION: 2, // Replace with your actual template ID
     NOTIFICATION: 4 // Replace with your actual template ID
 };
 
@@ -31,6 +33,12 @@ const EMAIL_TEMPLATES = {
  */
 const sendEmail = async ({ to, subject, htmlContent, templateId, params }) => {
     try {
+        // Debug: Log the request details
+        console.log('Sending email to:', to);
+        console.log('Subject:', subject);
+        console.log('Template ID:', templateId);
+        console.log('Params:', params);
+
         const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
 
         sendSmtpEmail.to = [{ email: to }];
@@ -45,11 +53,20 @@ const sendEmail = async ({ to, subject, htmlContent, templateId, params }) => {
             sendSmtpEmail.htmlContent = htmlContent;
         }
 
+        // Debug: Log the full email object
+        console.log('Email object:', JSON.stringify(sendSmtpEmail, null, 2));
+
         const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+        console.log('Email sent successfully:', data);
         return { success: true, data };
     } catch (error) {
         console.error('Error sending email:', error);
-        throw new Error(error.message || 'Failed to send email');
+        console.error('Error details:', {
+            message: error.message,
+            status: error.status,
+            response: error.response?.body
+        });
+        throw new Error(`Failed to send email: ${error.message}`);
     }
 };
 
@@ -66,7 +83,7 @@ const sendWelcomeEmail = async (email, name) => {
         templateId: EMAIL_TEMPLATES.WELCOME,
         params: {
             name: name,
-            loginUrl: `${process.env.FRONTEND_URL}/login`
+            loginUrl: `${process.env.FRONTEND_URL}/`
         }
     });
 };
@@ -100,7 +117,10 @@ const sendVerificationEmail = async (email, verificationToken) => {
         subject: 'Verify Your Email',
         templateId: EMAIL_TEMPLATES.EMAIL_VERIFICATION,
         params: {
-            verificationUrl: `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`
+            verificationUrl: `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`,
+            contact: {
+                FIRSTNAME: email.split('@')[0] // Basic name extraction from email
+            }
         }
     });
 };

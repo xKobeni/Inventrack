@@ -1,4 +1,4 @@
-import { getUserByEmail, updateUser, deleteUser, activateUser, deactivateUser, getUserById, getAllUsers } from '../../models/userModels/user.models.js';
+import { getUserByEmail, updateUser, deleteUser, activateUser, deactivateUser, getUserById, getAllUsers, softDeleteUser, restoreUser } from '../../models/userModels/user.models.js';
 import bcrypt from 'bcrypt';
 
 // Get all users (admin only)
@@ -18,6 +18,7 @@ export const fetchAllUsers = async (req, res) => {
         const search = req.query.search || '';
         const role = req.query.role;
         const isActive = req.query.is_active;
+        const isDeleted = req.query.is_deleted;
         const sortBy = req.query.sort_by || 'created_at';
         const sortOrder = req.query.sort_order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
 
@@ -31,6 +32,7 @@ export const fetchAllUsers = async (req, res) => {
             search,
             role,
             isActive,
+            isDeleted,
             sortBy,
             sortOrder
         });
@@ -42,6 +44,8 @@ export const fetchAllUsers = async (req, res) => {
             email: user.email,
             role: user.role,
             is_active: user.is_active,
+            is_deleted: user.is_deleted,
+            deleted_at: user.deleted_at,
             created_at: user.created_at,
             profile_picture: user.profile_picture ? `data:${user.profile_picture_type};base64,${user.profile_picture.toString('base64')}` : null,
             department_id: user.department_id,
@@ -439,4 +443,90 @@ export const updateAnyUserProfile = async (req, res) => {
             }
         }
     });
+};
+
+// Soft delete user (admin only)
+export const softDeleteUserAccount = async (req, res) => {
+    try {
+        // Check if user is admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied. You must be an admin to soft delete users.'
+            });
+        }
+
+        const userId = req.params.id;
+        const deletedUser = await softDeleteUser(userId);
+
+        if (!deletedUser) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'User soft deleted successfully',
+            data: {
+                user: {
+                    id: deletedUser.user_id,
+                    name: deletedUser.name,
+                    email: deletedUser.email,
+                    is_deleted: deletedUser.is_deleted,
+                    deleted_at: deletedUser.deleted_at
+                }
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error soft deleting user',
+            error: error.message
+        });
+    }
+};
+
+// Restore soft deleted user (admin only)
+export const restoreUserAccount = async (req, res) => {
+    try {
+        // Check if user is admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied. You must be an admin to restore users.'
+            });
+        }
+
+        const userId = req.params.id;
+        const restoredUser = await restoreUser(userId);
+
+        if (!restoredUser) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'User restored successfully',
+            data: {
+                user: {
+                    id: restoredUser.user_id,
+                    name: restoredUser.name,
+                    email: restoredUser.email,
+                    is_deleted: restoredUser.is_deleted,
+                    deleted_at: restoredUser.deleted_at
+                }
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error restoring user',
+            error: error.message
+        });
+    }
 };
