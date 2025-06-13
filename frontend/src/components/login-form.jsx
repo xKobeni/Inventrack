@@ -8,6 +8,7 @@ import { useToast } from "../hooks/use-toast.js"
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export function LoginForm({
   className,
@@ -17,9 +18,10 @@ export function LoginForm({
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [unverifiedEmail, setUnverifiedEmail] = useState(null)
   const navigate = useNavigate()
   const location = useLocation()
-  const [showPassword, setShowPassword] = useState(false)
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -39,6 +41,7 @@ export function LoginForm({
 
     try {
       setIsLoading(true)
+      setUnverifiedEmail(null)
       await login({ email, password })
       
       toast({
@@ -55,11 +58,22 @@ export function LoginForm({
       navigate(from, { replace: true })
     } catch (error) {
       console.error('Login error details:', error);
-      toast({
-        title: "Login Failed",
-        description: error.message || "Invalid email or password. Please try again.",
-        variant: "destructive",
-      })
+      
+      // Check if the error is due to unverified email
+      if (error.response?.status === 403 && error.response?.data?.requiresVerification) {
+        setUnverifiedEmail(error.response.data.email)
+        toast({
+          title: "Email Not Verified",
+          description: "Please verify your email before logging in.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Login Failed",
+          description: error.message || "Invalid email or password. Please try again.",
+          variant: "destructive",
+        })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -73,6 +87,23 @@ export function LoginForm({
           Enter your credentials to access your account
         </p>
       </div>
+      
+      {unverifiedEmail && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription className="flex flex-col gap-2">
+            <p>Your email ({unverifiedEmail}) is not verified.</p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => navigate('/verify-email', { state: { email: unverifiedEmail } })}
+            >
+              Request Verification Email
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid gap-6">
         <div className="grid gap-2">
           <Label htmlFor="email" className="text-sm font-medium">Email</Label>

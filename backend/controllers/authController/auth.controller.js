@@ -47,27 +47,11 @@ const login = async (req, res) => {
         }
 
         if (!user.is_verified) {
-            try {
-                // Generate a new verification token
-                const token = await createVerificationToken(user.user_id);
-                // Send verification email
-                await sendVerificationEmail(user.email, token);
-                
-                return res.status(403).json({ 
-                    message: 'Please verify your email before logging in',
-                    requiresVerification: true,
-                    email: user.email
-                });
-            } catch (emailError) {
-                console.error('Error sending verification email:', emailError);
-                // Still return 403 but with a different message
-                return res.status(403).json({ 
-                    message: 'Please verify your email before logging in. Contact support if you need a new verification email.',
-                    requiresVerification: true,
-                    email: user.email,
-                    emailError: true
-                });
-            }
+            return res.status(403).json({ 
+                message: 'Please verify your email before logging in',
+                requiresVerification: true,
+                email: user.email
+            });
         }
 
         // Generate token with only id and role

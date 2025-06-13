@@ -41,7 +41,7 @@ const EmailVerification = () => {
         try {
             await verifyEmail(token);
             setTimeout(() => {
-                navigate('/login');
+                navigate('/');
             }, 3000);
         } catch (error) {
             console.error('Verification failed:', error);

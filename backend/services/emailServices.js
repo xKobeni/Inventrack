@@ -5,6 +5,13 @@ if (!process.env.BREVO_API_KEY) {
     console.error('BREVO_API_KEY is not set in environment variables');
 }
 
+// Debug: Check FRONTEND_URL
+if (!process.env.FRONTEND_URL) {
+    console.error('FRONTEND_URL is not set in environment variables');
+} else {
+    console.log('FRONTEND_URL is set to:', process.env.FRONTEND_URL);
+}
+
 // Configure API key authorization
 const defaultClient = SibApiV3Sdk.ApiClient.instance;
 const apiKey = defaultClient.authentications['api-key'];
@@ -34,10 +41,18 @@ const EMAIL_TEMPLATES = {
 const sendEmail = async ({ to, subject, htmlContent, templateId, params }) => {
     try {
         // Debug: Log the request details
-        console.log('Sending email to:', to);
+        console.log('\n=== Email Send Attempt ===');
+        console.log('To:', to);
         console.log('Subject:', subject);
         console.log('Template ID:', templateId);
-        console.log('Params:', params);
+        console.log('Template Params:', JSON.stringify(params, null, 2));
+
+        // Validate required parameters
+        if (!to) throw new Error('Recipient email is required');
+        if (!templateId && !htmlContent) throw new Error('Either templateId or htmlContent is required');
+        if (templateId && !EMAIL_TEMPLATES[Object.keys(EMAIL_TEMPLATES).find(key => EMAIL_TEMPLATES[key] === templateId)]) {
+            throw new Error(`Invalid template ID: ${templateId}`);
+        }
 
         const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
 
@@ -53,19 +68,29 @@ const sendEmail = async ({ to, subject, htmlContent, templateId, params }) => {
             sendSmtpEmail.htmlContent = htmlContent;
         }
 
-        // Debug: Log the full email object
-        console.log('Email object:', JSON.stringify(sendSmtpEmail, null, 2));
+        // Debug: Log the API request
+        console.log('\nSending email with configuration:');
+        console.log(JSON.stringify(sendSmtpEmail, null, 2));
 
         const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-        console.log('Email sent successfully:', data);
+        console.log('\nEmail sent successfully:', data);
+        console.log('=== End Email Send ===\n');
         return { success: true, data };
     } catch (error) {
-        console.error('Error sending email:', error);
-        console.error('Error details:', {
-            message: error.message,
-            status: error.status,
-            response: error.response?.body
-        });
+        console.error('\n=== Email Send Error ===');
+        console.error('Error Type:', error.constructor.name);
+        console.error('Error Message:', error.message);
+        console.error('Error Stack:', error.stack);
+        
+        if (error.response) {
+            console.error('API Response Error:', {
+                status: error.response.status,
+                statusText: error.response.statusText,
+                body: error.response.body
+            });
+        }
+        
+        console.error('=== End Error ===\n');
         throw new Error(`Failed to send email: ${error.message}`);
     }
 };
@@ -112,15 +137,36 @@ const sendPasswordResetEmail = async (email, resetToken) => {
  * @returns {Promise} - Promise with the email sending result
  */
 const sendVerificationEmail = async (email, verificationToken) => {
+    const firstName = email.split('@')[0]; // Basic name extraction from email
+    
+    // Debug: Log verification attempt
+    console.log('Attempting to send verification email:', {
+        to: email,
+        firstName,
+        verificationToken: verificationToken.substring(0, 8) + '...',
+        templateId: EMAIL_TEMPLATES.EMAIL_VERIFICATION,
+        frontendUrl: process.env.FRONTEND_URL
+    });
+
+    const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
+    
     return sendEmail({
         to: email,
-        subject: 'Verify Your Email',
+        subject: 'Verify Your Email - Welcome to Inventrack',
         templateId: EMAIL_TEMPLATES.EMAIL_VERIFICATION,
         params: {
-            verificationUrl: `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`,
+            verificationUrl: verificationUrl,
             contact: {
-                FIRSTNAME: email.split('@')[0] // Basic name extraction from email
-            }
+                FIRSTNAME: firstName
+            },
+            company: {
+                name: 'Inventrack',
+                website: process.env.FRONTEND_URL || 'http://localhost:3000',
+                email: 'inventrack1@gmail.com'
+            },
+            // Additional parameters that might be needed by the template
+            logo_url: 'https://inventrack.gov.ph/assets/logo.png',
+            current_year: new Date().getFullYear()
         }
     });
 };

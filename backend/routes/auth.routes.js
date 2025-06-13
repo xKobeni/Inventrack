@@ -4,6 +4,7 @@ import { requestPasswordReset, resetPassword } from "../controllers/authControll
 import { registerValidation, loginValidation } from "../middleware/validation.js";
 import { authLimiter, passwordResetLimiter } from "../middleware/rateLimit.middleware.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
+import { requestVerification, verifyEmail } from '../controllers/authController/emailVerification.controller.js';
 
 const router = Router();
 
@@ -11,6 +12,10 @@ const router = Router();
 router.post("/login", authLimiter, loginValidation, login);
 router.post("/register", registerValidation, registerUser);
 router.post("/logout", authMiddleware, logout);
+
+// Email verification routes
+router.post('/verify/request', requestVerification);
+router.post('/verify/confirm', verifyEmail);
 
 // Password reset routes
 router.post("/password/reset-request", passwordResetLimiter, requestPasswordReset);
