@@ -12,6 +12,7 @@ import {
     inventoryUpdateValidation, 
     inventoryIdValidation 
 } from '../middleware/validation.js';
+import { inventoryLimiter } from '../middleware/endpointRateLimiters.js';
 
 const router = Router();
 
@@ -19,18 +20,18 @@ const router = Router();
 router.use(authMiddleware);
 
 // Get all inventory items (admin and GSO staff only)
-router.get('/', fetchAllInventoryItems);
+router.get('/', inventoryLimiter.get, fetchAllInventoryItems);
 
 // Get inventory item by ID (admin and GSO staff only)
-router.get('/:id', inventoryIdValidation, fetchInventoryItemById);
+router.get('/:id', inventoryLimiter.get, inventoryIdValidation, fetchInventoryItemById);
 
 // Create new inventory item (admin and GSO staff only)
-router.post('/', inventoryValidation, createNewInventoryItem);
+router.post('/', inventoryLimiter.modify, inventoryValidation, createNewInventoryItem);
 
 // Update inventory item (admin and GSO staff only)
-router.put('/:id', [...inventoryIdValidation, ...inventoryUpdateValidation], updateExistingInventoryItem);
+router.put('/:id', inventoryLimiter.modify, [...inventoryIdValidation, ...inventoryUpdateValidation], updateExistingInventoryItem);
 
 // Delete inventory item (admin and GSO staff only)
-router.delete('/:id', inventoryIdValidation, deleteExistingInventoryItem);
+router.delete('/:id', inventoryLimiter.modify, inventoryIdValidation, deleteExistingInventoryItem);
 
 export default router;

@@ -14,6 +14,7 @@ import {
     procurementUpdateValidation, 
     procurementIdValidation 
 } from '../middleware/validation.js';
+import { procurementLimiter } from "../middleware/endpointRateLimiters.js";
 
 const router = Router();
 
@@ -21,24 +22,24 @@ const router = Router();
 router.use(authMiddleware);
 
 // Get all procurement requests (admin and GSO staff only)
-router.get('/', fetchAllProcurementRequests);
+router.get('/', procurementLimiter.view, fetchAllProcurementRequests);
 
 // Get my procurement requests (all authenticated users)
-router.get('/my-requests', fetchMyProcurementRequests);
+router.get('/my-requests', procurementLimiter.view, fetchMyProcurementRequests);
 
 // Get procurement requests by department (admin and GSO staff only)
-router.get('/department/:departmentId', fetchProcurementRequestsByDepartment);
+router.get('/department/:departmentId', procurementLimiter.view, fetchProcurementRequestsByDepartment);
 
 // Get procurement request by ID (admin and GSO staff only)
-router.get('/:id', procurementIdValidation, fetchProcurementRequestById);
+router.get('/:id', procurementLimiter.view, procurementIdValidation, fetchProcurementRequestById);
 
 // Create new procurement request (all authenticated users)
-router.post('/', procurementValidation, createNewProcurementRequest);
+router.post('/', procurementLimiter.modify, procurementValidation, createNewProcurementRequest);
 
 // Update procurement request (admin and GSO staff only)
-router.put('/:id', [...procurementIdValidation, ...procurementUpdateValidation], updateExistingProcurementRequest);
+router.put('/:id', procurementLimiter.modify, [...procurementIdValidation, ...procurementUpdateValidation], updateExistingProcurementRequest);
 
 // Delete procurement request (admin and GSO staff only)
-router.delete('/:id', procurementIdValidation, deleteExistingProcurementRequest);
+router.delete('/:id', procurementLimiter.modify, procurementIdValidation, deleteExistingProcurementRequest);
 
 export default router;

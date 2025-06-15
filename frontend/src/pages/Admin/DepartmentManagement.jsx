@@ -61,6 +61,15 @@ import { MoreHorizontal, Search, Plus, Pencil, Trash2, Power, PowerOff, Download
 import { format } from 'date-fns';
 import { exportToCSV } from '../../utils/exports';
 import { getAvailableUsers } from "../../services/helper";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const DepartmentManagement = () => {
   const { toast } = useToast();
@@ -88,7 +97,6 @@ const DepartmentManagement = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [pageSize, setPageSize] = useState(10);
-  const [jumpPage, setJumpPage] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
 
@@ -286,16 +294,6 @@ const DepartmentManagement = () => {
       setSortBy(column);
       setSortOrder('asc');
     }
-  };
-
-  // Jump to page handler
-  const handleJumpPage = (e) => {
-    e.preventDefault();
-    const page = parseInt(jumpPage, 10);
-    if (!isNaN(page) && page >= 1 && page <= pagination.totalPages) {
-      setCurrentPage(page);
-    }
-    setJumpPage('');
   };
 
   // Helper to get selected user object
@@ -511,42 +509,55 @@ const DepartmentManagement = () => {
                   <div className="text-sm text-muted-foreground">
                     Showing {departments.length} of {pagination.totalItems} departments
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      Previous
-                    </Button>
-                    <span>Page {currentPage} of {pagination.totalPages}</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setCurrentPage((p) =>
-                          Math.min(pagination.totalPages, p + 1)
-                        )
-                      }
-                      disabled={currentPage === pagination.totalPages}
-                    >
-                      Next
-                    </Button>
-                    {/* Jump to page */}
-                    <form onSubmit={handleJumpPage} className="flex items-center gap-1">
-                      <Input
-                        type="number"
-                        min="1"
-                        max={pagination.totalPages}
-                        value={jumpPage}
-                        onChange={e => setJumpPage(e.target.value)}
-                        className="w-16 h-8 px-2 text-sm"
-                        placeholder="#"
-                        aria-label="Jump to page"
-                      />
-                      <Button type="submit" size="sm" variant="outline">Go</Button>
-                    </form>
+                  <div className="flex items-center gap-2">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => {
+                          // Show first page, last page, current page, and pages around current page
+                          if (
+                            page === 1 ||
+                            page === pagination.totalPages ||
+                            (page >= currentPage - 1 && page <= currentPage + 1)
+                          ) {
+                            return (
+                              <PaginationItem key={page}>
+                                <PaginationLink
+                                  onClick={() => setCurrentPage(page)}
+                                  isActive={currentPage === page}
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          }
+                          // Show ellipsis
+                          if (
+                            (page === 2 && currentPage > 3) ||
+                            (page === pagination.totalPages - 1 && currentPage < pagination.totalPages - 2)
+                          ) {
+                            return (
+                              <PaginationItem key={page}>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
+                          }
+                          return null;
+                        })}
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
+                            disabled={currentPage === pagination.totalPages}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                    <span className="ml-2 text-sm text-muted-foreground">Page {currentPage} of {pagination.totalPages}</span>
                   </div>
                 </div>
               </div>
