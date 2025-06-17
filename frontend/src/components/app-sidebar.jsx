@@ -81,20 +81,16 @@ export function AppSidebar({
         },
         {
           title: "Inventory Management",
-          url: "/inventory",
+          url: "/admin/inventory",
           icon: Layers,
           items: [
             {
               title: "Items",
-              url: "/inventory/items",
+              url: "/admin/inventory",
             },
             {
-              title: "Categories",
-              url: "/inventory/categories",
-            },
-            {
-              title: "Stock",
-              url: "/inventory/stock",
+              title: "Add Item",
+              url: "/admin/inventory/add",
             },
           ],
         },

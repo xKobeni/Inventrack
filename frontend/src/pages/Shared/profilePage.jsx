@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
 import useUserStore from "../../store/useUserStore";
 import useUserSessionStore from "../../store/useUserSessionStore";
+import useUserPreferencesStore from "../../store/useUserPreferencesStore";
 import { useToast } from "../../hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,11 +30,13 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Eye, EyeOff, Mail, Phone, Building, Calendar, Shield, Bell, Lock, User, Settings, LogOut } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function ProfilePage() {
   const { user, isAuthenticated } = useAuthStore();
   const { updateProfile, changePassword, updateProfilePicture } = useUserStore();
   const { sessions: userSessions, loading: sessionsLoading, error: sessionsError, fetchSessions, logoutSession } = useUserSessionStore();
+  const { preferences, getPreferences, updatePreferences, isLoading: preferencesLoading, error: preferencesError } = useUserPreferencesStore();
   const { toast } = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -51,11 +54,6 @@ export default function ProfilePage() {
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
-  });
-  const [preferences, setPreferences] = useState({
-    emailNotifications: true,
-    securityAlerts: true,
-    twoFactorAuth: false,
   });
   const [isUploading, setIsUploading] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -77,6 +75,22 @@ export default function ProfilePage() {
       department: user?.department_name || user?.department || "",
     }));
 
+    // Fetch user preferences
+    const loadPreferences = async () => {
+      try {
+        await getPreferences();
+      } catch (err) {
+        // Only show error toast if it's not an authentication error
+        if (!err.message.includes('not authenticated')) {
+          toast({
+            title: "Error",
+            description: err.message || "Failed to load preferences. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }
+    };
+
     // Fetch user sessions
     const loadSessions = async () => {
       try {
@@ -90,8 +104,9 @@ export default function ProfilePage() {
       }
     };
     
+    loadPreferences();
     loadSessions();
-  }, [isAuthenticated, user, navigate, fetchSessions, toast]);
+  }, [isAuthenticated, user, navigate, fetchSessions, getPreferences, toast]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -101,11 +116,30 @@ export default function ProfilePage() {
     }));
   };
 
-  const handlePreferenceChange = (name) => {
-    setPreferences(prev => ({
-      ...prev,
-      [name]: !prev[name]
-    }));
+  const handlePreferenceChange = async (name, value) => {
+    try {
+      const updatedPreferences = {
+        ...preferences,
+        notification_settings: {
+          ...preferences?.notification_settings,
+          [name]: value
+        }
+      };
+      
+      await updatePreferences(updatedPreferences);
+      
+      toast({
+        title: "Success!",
+        description: "Preferences updated successfully.",
+        variant: "success",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update preferences.",
+        variant: "destructive",
+      });
+    }
   };
 
   const togglePasswordVisibility = (field) => {
@@ -282,6 +316,52 @@ export default function ProfilePage() {
       toast({
         title: "Error",
         description: error.message || "Failed to logout session.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleThemeChange = async (value) => {
+    try {
+      const updatedPreferences = {
+        ...preferences,
+        theme: value
+      };
+      
+      await updatePreferences(updatedPreferences);
+      
+      toast({
+        title: "Success!",
+        description: "Theme updated successfully.",
+        variant: "success",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update theme.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLanguageChange = async (value) => {
+    try {
+      const updatedPreferences = {
+        ...preferences,
+        language: value
+      };
+      
+      await updatePreferences(updatedPreferences);
+      
+      toast({
+        title: "Success!",
+        description: "Language updated successfully.",
+        variant: "success",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update language.",
         variant: "destructive",
       });
     }
@@ -495,6 +575,13 @@ export default function ProfilePage() {
                                     {showPasswords.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                   </button>
                                 </div>
+                                <button
+                                  type="button"
+                                  className="text-xs text-primary hover:underline mt-1 text-left"
+                                  onClick={() => navigate('/forgot-password')}
+                                >
+                                  Forgot Password?
+                                </button>
                               </div>
                               <div className="grid gap-2">
                                 <Label htmlFor="newPassword">New Password</Label>
@@ -540,51 +627,122 @@ export default function ProfilePage() {
                               </div>
                             </div>
                           </div>
+                          <div className="flex justify-end pt-2">
+                            <Button type="submit">
+                              Update Password
+                            </Button>
+                          </div>
                         </form>
                       </TabsContent>
                       {/* Preferences Tab */}
                       <TabsContent value="preferences">
                         <div className="space-y-6">
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-0.5">
-                                <Label>Email Notifications</Label>
-                                <p className="text-sm text-muted-foreground">
-                                  Receive email notifications for important updates
-                                </p>
-                              </div>
-                              <Switch
-                                checked={preferences.emailNotifications}
-                                onCheckedChange={() => handlePreferenceChange('emailNotifications')}
-                              />
+                          {preferencesError ? (
+                            <div className="p-4 text-sm text-destructive bg-destructive/10 rounded-md">
+                              {preferencesError}
                             </div>
-                            <Separator />
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-0.5">
-                                <Label>Security Alerts</Label>
-                                <p className="text-sm text-muted-foreground">
-                                  Get notified about security-related activities
-                                </p>
+                          ) : (
+                            <>
+                              {/* Theme Selection */}
+                              <div className="space-y-4">
+                                <div className="grid gap-2">
+                                  <Label>Theme</Label>
+                                  <Select
+                                    value={preferences?.theme || 'light'}
+                                    onValueChange={handleThemeChange}
+                                    disabled={preferencesLoading}
+                                  >
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="Select theme" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="light">Light</SelectItem>
+                                      <SelectItem value="dark">Dark</SelectItem>
+                                      <SelectItem value="system">System</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <p className="text-sm text-muted-foreground">
+                                    Choose your preferred theme for the application
+                                  </p>
+                                </div>
                               </div>
-                              <Switch
-                                checked={preferences.securityAlerts}
-                                onCheckedChange={() => handlePreferenceChange('securityAlerts')}
-                              />
-                            </div>
-                            <Separator />
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-0.5">
-                                <Label>Two-Factor Authentication</Label>
-                                <p className="text-sm text-muted-foreground">
-                                  Add an extra layer of security to your account
-                                </p>
+
+                              <Separator />
+
+                              {/* Language Selection */}
+                              <div className="space-y-4">
+                                <div className="grid gap-2">
+                                  <Label>Language</Label>
+                                  <Select
+                                    value={preferences?.language || 'en'}
+                                    onValueChange={handleLanguageChange}
+                                    disabled={preferencesLoading}
+                                  >
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="Select language" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="en">English</SelectItem>
+                                      <SelectItem value="es">Español</SelectItem>
+                                      <SelectItem value="fr">Français</SelectItem>
+                                      <SelectItem value="de">Deutsch</SelectItem>
+                                      <SelectItem value="ja">日本語</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <p className="text-sm text-muted-foreground">
+                                    Choose your preferred language for the application
+                                  </p>
+                                </div>
                               </div>
-                              <Switch
-                                checked={preferences.twoFactorAuth}
-                                onCheckedChange={() => handlePreferenceChange('twoFactorAuth')}
-                              />
-                            </div>
-                          </div>
+
+                              <Separator />
+
+                              {/* Notification Settings */}
+                              <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                  <div className="space-y-0.5">
+                                    <Label>Email Notifications</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                      Receive email notifications for important updates
+                                    </p>
+                                  </div>
+                                  <Switch
+                                    checked={preferences?.notification_settings?.email ?? true}
+                                    onCheckedChange={(checked) => handlePreferenceChange('email', checked)}
+                                    disabled={preferencesLoading}
+                                  />
+                                </div>
+                                <Separator />
+                                <div className="flex items-center justify-between">
+                                  <div className="space-y-0.5">
+                                    <Label>Push Notifications</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                      Receive push notifications for important updates
+                                    </p>
+                                  </div>
+                                  <Switch
+                                    checked={preferences?.notification_settings?.push ?? true}
+                                    onCheckedChange={(checked) => handlePreferenceChange('push', checked)}
+                                    disabled={preferencesLoading}
+                                  />
+                                </div>
+                                <Separator />
+                                <div className="flex items-center justify-between">
+                                  <div className="space-y-0.5">
+                                    <Label>Security Alerts</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                      Get notified about security-related activities
+                                    </p>
+                                  </div>
+                                  <Switch
+                                    checked={preferences?.notification_settings?.security ?? true}
+                                    onCheckedChange={(checked) => handlePreferenceChange('security', checked)}
+                                    disabled={preferencesLoading}
+                                  />
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </TabsContent>
                     </div>

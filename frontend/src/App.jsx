@@ -7,6 +7,7 @@ import ProfilePage from "./pages/Shared/profilePage"
 import UserManagement from "./pages/Admin/userManagement"
 import AddUser from "./pages/Admin/addUser"
 import DepartmentManagement from "./pages/Admin/DepartmentManagement"
+import InventoryManagement from "./pages/Admin/inventoryManagement"
 import Error403 from "./pages/Shared/403Error"
 import Error404 from "./pages/Shared/404Error"
 import Error500 from "./pages/Shared/500Error"
@@ -17,6 +18,7 @@ import { useEffect } from "react"
 import { generateCSPHeader } from "./utils/csp"
 import SecurityTests from "./pages/Admin/securityTests"
 import EmailVerification from "./pages/Auth/EmailVerification"
+import { ThemeProvider } from "./components/theme-provider"
 
 function App() {
   // Set security headers
@@ -59,65 +61,75 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/verify-email" element={<EmailVerification />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/security-tests"
-          element={
-            <ProtectedRoute>
-              <SecurityTests />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/users"
-          element={
-            <ProtectedRoute>
-              <UserManagement />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/users/add"
-          element={
-            <ProtectedRoute>
-              <AddUser />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/departments"
-          element={
-            <ProtectedRoute>
-              <DepartmentManagement />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/403" element={<Error403 />} />
-        <Route path="/404" element={<Error404 />} />
-        <Route path="/500" element={<Error500 />} />
-        <Route path="*" element={<Error404 />} />
-      </Routes>
-      <Toaster />
+      <ThemeProvider>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<EmailVerification />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/security-tests"
+            element={
+              <ProtectedRoute>
+                <SecurityTests />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute>
+                <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users/add"
+            element={
+              <ProtectedRoute>
+                <AddUser />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/departments"
+            element={
+              <ProtectedRoute>
+                <DepartmentManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/inventory"
+            element={
+              <ProtectedRoute>
+                <InventoryManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/403" element={<Error403 />} />
+          <Route path="/404" element={<Error404 />} />
+          <Route path="/500" element={<Error500 />} />
+          <Route path="*" element={<Error404 />} />
+        </Routes>
+        <Toaster />
+      </ThemeProvider>
     </ErrorBoundary>
   )
 }

@@ -38,6 +38,7 @@
     "react-hot-toast": "^2.5.2",
     "react-image-crop": "^11.0.10",
     "react-router-dom": "^7.6.1",
+    "recharts": "^2.15.3",
     "tailwind-merge": "^3.3.0",
     "tailwindcss-animate": "^1.0.7",
     "use-debounce": "^10.0.4",

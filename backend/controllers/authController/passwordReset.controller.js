@@ -3,6 +3,7 @@ import { createPasswordResetToken, getPasswordResetToken, markTokenAsUsed } from
 import { updateUser } from '../../models/userModels/user.models.js';
 import bcrypt from 'bcrypt';
 import { passwordResetLimiter } from '../../middleware/rateLimit.middleware.js';
+import { sendPasswordResetEmail } from '../../services/emailServices.js';
 
 // Request password reset
 export const requestPasswordReset = async (req, res) => {
@@ -19,15 +20,12 @@ export const requestPasswordReset = async (req, res) => {
 
         const resetToken = await createPasswordResetToken(user.user_id);
 
-        // TODO: Send email with reset link
-        // For now, we'll just return the token in the response
+        // Send email with reset link
+        await sendPasswordResetEmail(user.email, resetToken.token);
+
         res.status(200).json({
             success: true,
-            message: 'Password reset token generated successfully',
-            data: {
-                token: resetToken.token,
-                expires_at: resetToken.expires_at
-            }
+            message: 'If an account exists with this email, you will receive password reset instructions.'
         });
     } catch (error) {
         res.status(500).json({
@@ -41,7 +39,7 @@ export const requestPasswordReset = async (req, res) => {
 // Reset password
 export const resetPassword = async (req, res) => {
     try {
-        const { token, newPassword } = req.body;
+        const { token, password } = req.body;
 
         const resetToken = await getPasswordResetToken(token);
         if (!resetToken) {
@@ -53,7 +51,7 @@ export const resetPassword = async (req, res) => {
 
         // Hash the new password
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(newPassword, salt);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
         // Update user's password
         await updateUser(resetToken.user_id, { password: hashedPassword });

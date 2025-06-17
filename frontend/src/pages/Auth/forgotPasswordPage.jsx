@@ -3,26 +3,25 @@ import { PasswordResetForm } from "@/components/password-reset-form";
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex justify-center gap-2 md:justify-start">
-          <a href="#" className="flex items-center gap-2 font-medium">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <GalleryVerticalEnd className="size-4" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-muted/40 to-white dark:from-background dark:to-muted/40">
+      <div className="w-full max-w-md p-0 bg-white dark:bg-background rounded-2xl shadow-2xl border border-muted/30 flex flex-col overflow-hidden">
+        <div className="flex flex-col items-center gap-2 px-8 pt-8 pb-4 bg-primary/5 border-b border-muted/20">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow">
+              <GalleryVerticalEnd className="size-5" />
             </div>
-            InvenTrack
-          </a>
+            <span className="font-bold text-2xl tracking-tight">InvenTrack</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-primary font-semibold uppercase tracking-wider mb-1">
+            <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+            Step 1: Forgot Password
+          </div>
+          <h2 className="text-center text-xl font-semibold mb-1">Forgot Your Password?</h2>
+          <p className="text-center text-muted-foreground text-sm mb-2">Enter your email address to receive password reset instructions.</p>
         </div>
-        <div className="flex flex-1 items-center justify-center">
+        <div className="px-8 py-6">
           <PasswordResetForm />
         </div>
-      </div>
-      <div className="relative hidden bg-muted lg:block">
-        <img
-          src="/placeholder.svg"
-          alt="Image"
-          className="rounded-lg p-8 absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-        />
       </div>
     </div>
   );

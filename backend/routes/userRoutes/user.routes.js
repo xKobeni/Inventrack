@@ -12,7 +12,8 @@ import {
     updateAnyUserProfile,
     deleteAnyUserAccount,
     softDeleteUserAccount,
-    restoreUserAccount
+    restoreUserAccount,
+    changePassword
 } from "../../controllers/userController/user.controller.js";
 import {
     bulkUpdateUsersController,
@@ -40,6 +41,7 @@ router.put("/profile", updateProfileValidation, auditMiddleware('UPDATE_PROFILE'
 router.delete("/profile", auditMiddleware('DELETE_PROFILE'), deleteUserAccount);
 router.post("/profile/deactivate", auditMiddleware('DEACTIVATE_PROFILE'), deactivateUserAccount);
 router.post("/profile/activate", auditMiddleware('ACTIVATE_PROFILE'), activateUserAccount);
+router.put("/change-password", auditMiddleware('CHANGE_PASSWORD'), changePassword);
 
 // Admin only routes
 router.get("/", fetchAllUsers);

@@ -12,6 +12,7 @@ import procurementRoutes from "./routes/procurement.routes.js";
 import incidentReportsRoutes from "./routes/incidentReports.routes.js";
 import userPreferencesRoutes from './routes/userRoutes/userPreferences.routes.js';
 import sessionRoutes from './routes/session.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
 
 dotenv.config(); // Load environment variables from .env file
 const app = express();
@@ -58,6 +59,7 @@ app.use("/procurement", procurementRoutes);
 app.use("/incident-reports", incidentReportsRoutes);
 app.use('/preferences', userPreferencesRoutes);
 app.use('/sessions', sessionRoutes);
+app.use('/dashboard', dashboardRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -77,7 +79,5 @@ app.use((req, res) => {
         message: "The requested resource was not found"
     });
 });
-
-
 
 export default app;

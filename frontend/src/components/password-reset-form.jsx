@@ -16,6 +16,12 @@ export function PasswordResetForm() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Determine if user is authenticated (simple check for token in localStorage)
+  const isAuthenticated = Boolean(
+    localStorage.getItem('auth-storage') &&
+    JSON.parse(localStorage.getItem('auth-storage')).state.token
+  );
+
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -86,15 +92,21 @@ export function PasswordResetForm() {
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Sending..." : "Send Reset Instructions"}
+            {isLoading ? "Sending..." : "Send Reset Link"}
           </Button>
           <Button
             type="button"
             variant="ghost"
             className="w-full"
-            onClick={() => navigate("/")}
+            onClick={() => {
+              if (isAuthenticated) {
+                navigate(-1); // Go back to previous page
+              } else {
+                navigate("/"); // Go to login
+              }
+            }}
           >
-            Back to Login
+            {isAuthenticated ? "Back" : "Back to Login"}
           </Button>
         </CardFooter>
       </form>

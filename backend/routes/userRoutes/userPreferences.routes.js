@@ -12,7 +12,7 @@ const router = Router();
 router.use(authMiddleware);
 
 // User preferences routes
-router.get("/", auditMiddleware('VIEW_PREFERENCES'), getUserPreferencesController);
+router.get("/", getUserPreferencesController);
 router.put("/", auditMiddleware('UPDATE_PREFERENCES'), updateUserPreferencesController);
 
 export default router; 
