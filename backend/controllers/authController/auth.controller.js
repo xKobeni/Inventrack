@@ -112,7 +112,8 @@ const login = async (req, res) => {
                 profile_picture_type: user.profile_picture_type,
                 department_id: user.department_id,
                 department_name: user.department_name || null,
-                is_verified: user.is_verified
+                is_verified: user.is_verified,
+                contact_number: user.contact_number || null
             },
         });
     } catch (error) {
@@ -163,6 +164,7 @@ const registerUser = async (req, res) => {
                 profile_picture: profilePicture,
                 profile_picture_type: createdUser.profile_picture_type,
                 department_id: createdUser.department_id,
+                contact_number: createdUser.contact_number || null
             },
         });
     } catch (error) {

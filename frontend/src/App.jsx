@@ -8,6 +8,8 @@ import UserManagement from "./pages/Admin/userManagement"
 import AddUser from "./pages/Admin/addUser"
 import DepartmentManagement from "./pages/Admin/DepartmentManagement"
 import InventoryManagement from "./pages/Admin/inventoryManagement"
+import AddItem from "./pages/Admin/addItem"
+import CategoryManagement from "./pages/Admin/categoryManagement"
 import Error403 from "./pages/Shared/403Error"
 import Error404 from "./pages/Shared/404Error"
 import Error500 from "./pages/Shared/500Error"
@@ -120,6 +122,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <InventoryManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/inventory/add"
+            element={
+              <ProtectedRoute>
+                <AddItem />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/categories"
+            element={
+              <ProtectedRoute>
+                <CategoryManagement />
               </ProtectedRoute>
             }
           />

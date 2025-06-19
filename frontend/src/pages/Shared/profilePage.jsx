@@ -49,7 +49,7 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "",
+    contact_number: "",
     department: "",
     currentPassword: "",
     newPassword: "",
@@ -70,8 +70,8 @@ export default function ProfilePage() {
     setFormData(prev => ({
       ...prev,
       name: user?.name || "",
-      email: user?.email || "",
-      phone: user?.phone || "",
+      email: user?.email || "", 
+      contact_number: user?.contact_number || "",
       department: user?.department_name || user?.department || "",
     }));
 
@@ -156,7 +156,7 @@ export default function ProfilePage() {
       const response = await updateProfile({
         name: formData.name,
         email: formData.email,
-        phone: formData.phone,
+        contact_number: formData.contact_number,
         department: formData.department,
       });
 
@@ -172,7 +172,7 @@ export default function ProfilePage() {
         ...prev,
         name: response.data.user.name,
         email: response.data.user.email,
-        phone: response.data.user.phone,
+        contact_number: response.data.user.contact_number,
         department: response.data.user.department,
       }));
 
@@ -495,13 +495,13 @@ export default function ProfilePage() {
                             </div>
                             <div className="space-y-4">
                               <div className="grid gap-2">
-                                <Label htmlFor="phone">Phone Number</Label>
+                                <Label htmlFor="contact_number">Contact Number</Label>
                                 <div className="relative">
                                   <Input
-                                    id="phone"
-                                    name="phone"
+                                    id="contact_number"
+                                    name="contact_number"
                                     type="tel"
-                                    value={formData.phone}
+                                    value={formData.contact_number}
                                     onChange={handleInputChange}
                                     disabled={!isEditing}
                                     className="pl-9"

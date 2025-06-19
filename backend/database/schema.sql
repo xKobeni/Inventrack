@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS users (
     profile_picture_type VARCHAR(50),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_verified BOOLEAN DEFAULT FALSE
+    is_verified BOOLEAN DEFAULT FALSE,
+    contact_number VARCHAR(20)
 );
 
 CREATE TABLE IF NOT EXISTS access_permissions (
@@ -38,19 +39,32 @@ CREATE TABLE IF NOT EXISTS access_permissions (
     granted_by INTEGER REFERENCES users(user_id)
 );
 
+CREATE TABLE IF NOT EXISTS item_categories (
+    category_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE
+);
+
 CREATE TABLE IF NOT EXISTS inventory_items (
     item_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description TEXT,
-    category VARCHAR(100),
-    quantity INTEGER DEFAULT 0,
+    category_id INTEGER REFERENCES item_categories(category_id) ON DELETE SET NULL,
+    quantity INTEGER DEFAULT 0 CHECK (quantity >= 0),
     unit VARCHAR(20),
-    condition VARCHAR(50) DEFAULT 'new',
-    status VARCHAR(50) DEFAULT 'available',
+    condition VARCHAR(50) DEFAULT 'new' CHECK (condition IN ('new', 'good', 'fair', 'poor', 'damaged')),
+    status VARCHAR(50) DEFAULT 'available' CHECK (status IN ('available', 'assigned', 'disposed', 'lost', 'maintenance', 'reserved')),
     expiration_date DATE,
-    department_id INTEGER REFERENCES departments(department_id),
-    created_by INTEGER REFERENCES users(user_id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    acquisition_date DATE,
+    unit_cost NUMERIC(12, 2),
+    total_cost NUMERIC(14, 2) GENERATED ALWAYS AS (quantity * unit_cost) STORED,
+    location VARCHAR(100),
+    serial_number VARCHAR(100),
+    property_number VARCHAR(100),
+    department_id INTEGER REFERENCES departments(department_id) ON DELETE SET NULL,
+    created_by INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
+    updated_by INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS procurement_requests (

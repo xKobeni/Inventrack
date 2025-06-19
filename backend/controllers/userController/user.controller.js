@@ -49,7 +49,8 @@ export const fetchAllUsers = async (req, res) => {
             created_at: user.created_at,
             profile_picture: user.profile_picture ? `data:${user.profile_picture_type};base64,${user.profile_picture.toString('base64')}` : null,
             department_id: user.department_id,
-            department_name: user.department_name || null
+            department_name: user.department_name || null,
+            contact_number: user.contact_number || null
         }));
 
         res.status(200).json({
@@ -107,7 +108,8 @@ export const fetchUserById = async (req, res) => {
                     role: user.role,
                     is_active: user.is_active,
                     department_id: user.department_id,
-                    department_name: user.department_name || null
+                    department_name: user.department_name || null,
+                    contact_number: user.contact_number || null
                 }
             }
         });
@@ -151,7 +153,8 @@ export const getUserProfile = async (req, res) => {
                     is_active: user.is_active,
                     profile_picture: profilePicture,
                     department_id: user.department_id,
-                    department_name: user.department_name || null
+                    department_name: user.department_name || null,
+                    contact_number: user.contact_number || null
                 }
             }
         });
@@ -168,7 +171,7 @@ export const getUserProfile = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
     try {
         const userId = req.user.id; // From auth middleware
-        const { name, email, password, profile_picture, profile_picture_type } = req.body;
+        const { name, email, password, profile_picture, profile_picture_type, contact_number } = req.body;
 
         // If password is provided, hash it
         let hashedPassword;
@@ -182,7 +185,8 @@ export const updateUserProfile = async (req, res) => {
             email,
             password: hashedPassword,
             profile_picture,
-            profile_picture_type
+            profile_picture_type,
+            contact_number
         });
 
         // Convert binary image data to base64 if it exists
@@ -200,7 +204,8 @@ export const updateUserProfile = async (req, res) => {
                     name: updatedUser.name,
                     email: updatedUser.email,
                     role: updatedUser.role,
-                    profile_picture: profilePicture
+                    profile_picture: profilePicture,
+                    contact_number: updatedUser.contact_number || null
                 }
             }
         });

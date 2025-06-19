@@ -75,8 +75,8 @@ const getAllUsers = async ({ limit, offset, search, role, isActive, isDeleted, s
 
 const createUser = async (user) => {
     const profilePictureBuffer = user.profile_picture ? Buffer.from(user.profile_picture, 'base64') : null;
-    const query = 'INSERT INTO users (name, email, password, role, department_id, profile_picture, profile_picture_type) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *';
-    const values = [user.name, user.email, user.password, user.role, user.department_id || null, profilePictureBuffer, user.profile_picture_type];
+    const query = 'INSERT INTO users (name, email, password, role, department_id, profile_picture, profile_picture_type, contact_number) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *';
+    const values = [user.name, user.email, user.password, user.role, user.department_id || null, profilePictureBuffer, user.profile_picture_type, user.contact_number];
     const { rows } = await pool.query(query, values);
     return rows[0]; // Return the created user
 }
@@ -96,7 +96,7 @@ const activateUser = async (userId) => {
 }
 
 const updateUser = async (userId, userData) => {
-    const { name, email, password, role, department_id, profile_picture, profile_picture_type } = userData;
+    const { name, email, password, role, department_id, profile_picture, profile_picture_type, contact_number } = userData;
     const profilePictureBuffer = profile_picture ? Buffer.from(profile_picture, 'base64') : null;
     const query = `
         UPDATE users 
@@ -106,10 +106,11 @@ const updateUser = async (userId, userData) => {
             role = COALESCE($4, role),
             department_id = $5,
             profile_picture = COALESCE($6, profile_picture),
-            profile_picture_type = COALESCE($7, profile_picture_type)
-        WHERE user_id = $8 
+            profile_picture_type = COALESCE($7, profile_picture_type),
+            contact_number = COALESCE($8, contact_number)
+        WHERE user_id = $9 
         RETURNING *`;
-    const values = [name, email, password, role, department_id || null, profilePictureBuffer, profile_picture_type, userId];
+    const values = [name, email, password, role, department_id || null, profilePictureBuffer, profile_picture_type, contact_number, userId];
     const { rows } = await pool.query(query, values);
     return rows[0]; // Return the updated user
 }
@@ -137,8 +138,9 @@ const bulkUpdateUsers = async (userIds, updateData) => {
                     role = COALESCE($4, role),
                     is_active = COALESCE($5, is_active),
                     profile_picture = COALESCE($6, profile_picture),
-                    profile_picture_type = COALESCE($7, profile_picture_type)
-                WHERE user_id = $8 
+                    profile_picture_type = COALESCE($7, profile_picture_type),
+                    contact_number = COALESCE($8, contact_number)
+                WHERE user_id = $9 
                 RETURNING *`;
             const values = [
                 updateData.name,
@@ -148,6 +150,7 @@ const bulkUpdateUsers = async (userIds, updateData) => {
                 updateData.is_active,
                 profilePictureBuffer,
                 updateData.profile_picture_type,
+                updateData.contact_number,
                 userId
             ];
             const { rows } = await client.query(query, values);

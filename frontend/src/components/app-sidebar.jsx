@@ -92,6 +92,10 @@ export function AppSidebar({
               title: "Add Item",
               url: "/admin/inventory/add",
             },
+            {
+              title: "Manage Categories",
+              url: "/admin/categories",
+            },
           ],
         },
         {

@@ -82,6 +82,10 @@ export const updateProfileValidation = [
         .optional()
         .isIn(['image/jpeg', 'image/png', 'image/gif'])
         .withMessage('Profile picture must be a JPEG, PNG, or GIF image'),
+    body('contact_number')
+        .optional()
+        .isMobilePhone()
+        .withMessage('Contact number must be a valid mobile number'),
     validate
 ];
 
@@ -129,6 +133,10 @@ export const adminUpdateUserValidation = [
         .optional()
         .isIn(['image/jpeg', 'image/png', 'image/gif'])
         .withMessage('Profile picture must be a JPEG, PNG, or GIF image'),
+    body('contact_number')
+        .optional()
+        .isMobilePhone()
+        .withMessage('Contact number must be a valid mobile number'),
     validate
 ];
 
@@ -175,45 +183,73 @@ export const departmentIdValidation = [
 export const inventoryValidation = [
     body('name')
         .trim()
-        .isLength({ min: 2, max: 100 })
-        .withMessage('Item name must be between 2 and 100 characters long')
-        .matches(/^[a-zA-Z0-9\s\-_]+$/)
-        .withMessage('Item name can only contain letters, numbers, spaces, hyphens, and underscores'),
+        .notEmpty()
+        .withMessage('Name is required')
+        .isLength({ max: 100 })
+        .withMessage('Name must be at most 100 characters'),
     body('description')
         .optional()
         .trim()
-        .isLength({ max: 500 })
-        .withMessage('Description must not exceed 500 characters'),
-    body('category')
-        .optional()
-        .trim()
-        .isLength({ max: 100 })
-        .withMessage('Category must not exceed 100 characters'),
+        .isString()
+        .withMessage('Description must be a string'),
+    body('category_id')
+        .notEmpty()
+        .withMessage('Category ID is required')
+        .isInt()
+        .withMessage('Category ID must be an integer'),
     body('quantity')
+        .notEmpty()
+        .withMessage('Quantity is required')
         .isInt({ min: 0 })
         .withMessage('Quantity must be a non-negative integer'),
     body('unit')
         .trim()
-        .isLength({ min: 1, max: 20 })
-        .withMessage('Unit must be between 1 and 20 characters'),
+        .notEmpty()
+        .withMessage('Unit is required')
+        .isLength({ max: 20 })
+        .withMessage('Unit must be at most 20 characters'),
     body('condition')
         .optional()
-        .isIn(['new', 'used', 'damaged', 'maintenance'])
-        .withMessage('Condition must be one of: new, used, damaged, maintenance'),
+        .trim()
+        .isIn(['new', 'good', 'fair', 'poor', 'damaged'])
+        .withMessage('Invalid condition value'),
     body('status')
         .optional()
-        .isIn(['available', 'unavailable', 'reserved', 'maintenance'])
-        .withMessage('Status must be one of: available, unavailable, reserved, maintenance'),
+        .trim()
+        .isIn(['available', 'assigned', 'disposed', 'lost', 'maintenance', 'reserved'])
+        .withMessage('Invalid status value'),
     body('expiration_date')
         .optional({ nullable: true })
-        .custom((value) => {
-            if (value === null || value === '') return true;
-            return /^\d{4}-\d{2}-\d{2}$/.test(value);
-        })
-        .withMessage('Expiration date must be null or a valid date in YYYY-MM-DD format'),
+        .custom(value => value === null || value === '' || typeof value === 'undefined' || (typeof value === 'string' && !isNaN(Date.parse(value))))
+        .withMessage('Invalid expiration date format'),
+    body('acquisition_date')
+        .optional({ nullable: true })
+        .custom(value => value === null || value === '' || typeof value === 'undefined' || (typeof value === 'string' && !isNaN(Date.parse(value))))
+        .withMessage('Invalid acquisition date format'),
+    body('unit_cost')
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage('Unit cost must be a non-negative number'),
+    body('location')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Location must be at most 100 characters'),
+    body('serial_number')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Serial number must be at most 100 characters'),
+    body('property_number')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Property number must be at most 100 characters'),
     body('department_id')
+        .notEmpty()
+        .withMessage('Department ID is required')
         .isInt()
-        .withMessage('Department ID must be a valid integer'),
+        .withMessage('Department ID must be an integer'),
     validate
 ];
 
@@ -222,20 +258,21 @@ export const inventoryUpdateValidation = [
     body('name')
         .optional()
         .trim()
-        .isLength({ min: 2, max: 100 })
-        .withMessage('Item name must be between 2 and 100 characters long')
-        .matches(/^[a-zA-Z0-9\s\-_]+$/)
-        .withMessage('Item name can only contain letters, numbers, spaces, hyphens, and underscores'),
+        .notEmpty()
+        .withMessage('Name cannot be empty')
+        .isLength({ max: 100 })
+        .withMessage('Name must be at most 100 characters'),
     body('description')
         .optional()
         .trim()
-        .isLength({ max: 500 })
-        .withMessage('Description must not exceed 500 characters'),
-    body('category')
+        .isString()
+        .withMessage('Description must be a string'),
+    body('category_id')
         .optional()
-        .trim()
-        .isLength({ max: 100 })
-        .withMessage('Category must not exceed 100 characters'),
+        .notEmpty()
+        .withMessage('Category ID cannot be empty')
+        .isInt()
+        .withMessage('Category ID must be an integer'),
     body('quantity')
         .optional()
         .isInt({ min: 0 })
@@ -243,27 +280,53 @@ export const inventoryUpdateValidation = [
     body('unit')
         .optional()
         .trim()
-        .isLength({ min: 1, max: 20 })
-        .withMessage('Unit must be between 1 and 20 characters'),
+        .notEmpty()
+        .withMessage('Unit cannot be empty')
+        .isLength({ max: 20 })
+        .withMessage('Unit must be at most 20 characters'),
     body('condition')
         .optional()
-        .isIn(['new', 'used', 'damaged', 'maintenance'])
-        .withMessage('Condition must be one of: new, used, damaged, maintenance'),
+        .trim()
+        .isIn(['new', 'good', 'fair', 'poor', 'damaged'])
+        .withMessage('Invalid condition value'),
     body('status')
         .optional()
-        .isIn(['available', 'unavailable', 'reserved', 'maintenance'])
-        .withMessage('Status must be one of: available, unavailable, reserved, maintenance'),
+        .trim()
+        .isIn(['available', 'assigned', 'disposed', 'lost', 'maintenance', 'reserved'])
+        .withMessage('Invalid status value'),
     body('expiration_date')
         .optional({ nullable: true })
-        .custom((value) => {
-            if (value === null || value === '') return true;
-            return /^\d{4}-\d{2}-\d{2}$/.test(value);
-        })
-        .withMessage('Expiration date must be null or a valid date in YYYY-MM-DD format'),
+        .custom(value => value === null || value === '' || typeof value === 'undefined' || (typeof value === 'string' && !isNaN(Date.parse(value))))
+        .withMessage('Invalid expiration date format'),
+    body('acquisition_date')
+        .optional({ nullable: true })
+        .custom(value => value === null || value === '' || typeof value === 'undefined' || (typeof value === 'string' && !isNaN(Date.parse(value))))
+        .withMessage('Invalid acquisition date format'),
+    body('unit_cost')
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage('Unit cost must be a non-negative number'),
+    body('location')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Location must be at most 100 characters'),
+    body('serial_number')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Serial number must be at most 100 characters'),
+    body('property_number')
+        .optional()
+        .trim()
+        .isLength({ max: 100 })
+        .withMessage('Property number must be at most 100 characters'),
     body('department_id')
         .optional()
+        .notEmpty()
+        .withMessage('Department ID cannot be empty')
         .isInt()
-        .withMessage('Department ID must be a valid integer'),
+        .withMessage('Department ID must be an integer'),
     validate
 ];
 
@@ -271,7 +334,7 @@ export const inventoryUpdateValidation = [
 export const inventoryIdValidation = [
     param('id')
         .isInt()
-        .withMessage('Inventory item ID must be a valid integer'),
+        .withMessage('Invalid inventory item ID'),
     validate
 ];
 
@@ -468,5 +531,23 @@ export const emailVerificationConfirmValidation = [
     body('token')
         .notEmpty()
         .withMessage('Verification token is required'),
+    validate
+];
+
+// Category validation
+export const categoryValidation = [
+    body('name')
+        .trim()
+        .notEmpty()
+        .withMessage('Category name is required')
+        .isLength({ max: 100 })
+        .withMessage('Category name must be at most 100 characters'),
+    validate
+];
+
+export const categoryIdValidation = [
+    param('id')
+        .isInt()
+        .withMessage('Invalid category ID'),
     validate
 ];

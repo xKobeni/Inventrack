@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import useInventoryStore from "../../store/useInventoryStore";
 import useDepartmentStore from "../../store/useDepartmentStore";
+import useCategoryStore from "../../store/useCategoryStore";
 import { useToast } from "../../hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Card,
   CardContent,
@@ -81,6 +83,7 @@ export default function InventoryManagement() {
     updateItem,
   } = useInventoryStore();
   const { departments, fetchDepartments } = useDepartmentStore();
+  const { categories, fetchCategories } = useCategoryStore();
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -92,12 +95,17 @@ export default function InventoryManagement() {
   const [editFormData, setEditFormData] = useState({
     name: "",
     description: "",
-    category: "",
+    category_id: "",
     quantity: "",
     unit: "",
     condition: "",
     status: "",
-    expiration_date: "",
+    expiration_date: null,
+    acquisition_date: null,
+    unit_cost: "",
+    location: "",
+    serial_number: "",
+    property_number: "",
     department_id: ""
   });
   const [pageSize, setPageSize] = useState(10);
@@ -111,6 +119,7 @@ export default function InventoryManagement() {
   useEffect(() => {
     loadItems();
     fetchDepartments();
+    fetchCategories();
   }, [currentPage, categoryFilter, statusFilter, pageSize, sortBy, sortOrder]);
 
   const loadItems = async () => {
@@ -167,13 +176,18 @@ export default function InventoryManagement() {
     setEditFormData({
       name: item.name,
       description: item.description || "",
-      category: item.category || "",
+      category_id: item.category_id ? String(item.category_id) : "",
       quantity: item.quantity,
       unit: item.unit,
       condition: item.condition || "",
       status: item.status || "",
-      expiration_date: item.expiration_date || "",
-      department_id: item.department_id || ""
+      expiration_date: item.expiration_date ? new Date(item.expiration_date) : null,
+      acquisition_date: item.acquisition_date ? new Date(item.acquisition_date) : null,
+      unit_cost: item.unit_cost || "",
+      location: item.location || "",
+      serial_number: item.serial_number || "",
+      property_number: item.property_number || "",
+      department_id: item.department_id ? String(item.department_id) : ""
     });
     setIsEditDialogOpen(true);
   };
@@ -186,10 +200,30 @@ export default function InventoryManagement() {
     }));
   };
 
+  const handleEditDateChange = (name, date) => {
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: date
+    }));
+  };
+
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      await updateItem(editingItem.item_id, editFormData);
+      // Convert date objects to ISO strings for backend, omit if not set
+      const submitData = { ...editFormData };
+      if (editFormData.acquisition_date) {
+        submitData.acquisition_date = editFormData.acquisition_date.toISOString().split('T')[0];
+      } else {
+        delete submitData.acquisition_date;
+      }
+      if (editFormData.expiration_date) {
+        submitData.expiration_date = editFormData.expiration_date.toISOString().split('T')[0];
+      } else {
+        delete submitData.expiration_date;
+      }
+
+      await updateItem(editingItem.item_id, submitData);
       toast({
         title: "Success",
         description: "Item updated successfully",
@@ -264,6 +298,10 @@ export default function InventoryManagement() {
                   <Button variant="outline" size="icon" onClick={() => exportToCSV(items)} title="Export CSV">
                     <Download className="h-4 w-4" />
                   </Button>
+                  <Button variant="outline" onClick={() => navigate("/admin/categories")}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Manage Categories
+                  </Button>
                   <Button onClick={() => navigate("/admin/inventory/add")}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Item
@@ -292,10 +330,11 @@ export default function InventoryManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="office_supplies">Office Supplies</SelectItem>
-                      <SelectItem value="electronics">Electronics</SelectItem>
-                      <SelectItem value="furniture">Furniture</SelectItem>
-                      <SelectItem value="equipment">Equipment</SelectItem>
+                      {categories.map(cat => (
+                        <SelectItem key={cat.category_id} value={String(cat.category_id)}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -329,8 +368,8 @@ export default function InventoryManagement() {
                         <TableHead className="cursor-pointer select-none" onClick={() => handleSort('name')}>
                           Name {sortBy === 'name' && (sortOrder === 'asc' ? '▲' : '▼')}
                         </TableHead>
-                        <TableHead className="cursor-pointer select-none" onClick={() => handleSort('category')}>
-                          Category {sortBy === 'category' && (sortOrder === 'asc' ? '▲' : '▼')}
+                        <TableHead className="cursor-pointer select-none" onClick={() => handleSort('category_id')}>
+                          Category {sortBy === 'category_id' && (sortOrder === 'asc' ? '▲' : '▼')}
                         </TableHead>
                         <TableHead className="cursor-pointer select-none" onClick={() => handleSort('quantity')}>
                           Quantity {sortBy === 'quantity' && (sortOrder === 'asc' ? '▲' : '▼')}
@@ -364,7 +403,7 @@ export default function InventoryManagement() {
                         items.map((item) => (
                           <TableRow key={item.item_id}>
                             <TableCell>{item.name}</TableCell>
-                            <TableCell>{item.category}</TableCell>
+                            <TableCell>{item.category_name || (categories.find(c => c.category_id === item.category_id)?.name) || 'N/A'}</TableCell>
                             <TableCell>{item.quantity} {item.unit}</TableCell>
                             <TableCell>
                               <span
@@ -476,154 +515,306 @@ export default function InventoryManagement() {
 
         {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Edit Item</DialogTitle>
+              <DialogTitle className="text-xl font-semibold">Edit Inventory Item</DialogTitle>
               <DialogDescription>
-                Make changes to the item's information here.
+                Update the item's information. Required fields are marked with an asterisk (*).
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={editFormData.name}
-                    onChange={handleEditInputChange}
-                    required
-                  />
+            <form onSubmit={handleEditSubmit} className="space-y-6">
+              {/* Basic Information Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Basic Information</h3>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Input
-                    id="description"
-                    name="description"
-                    value={editFormData.description}
-                    onChange={handleEditInputChange}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select
-                    value={editFormData.category}
-                    onValueChange={(value) =>
-                      setEditFormData((prev) => ({ ...prev, category: value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="office_supplies">Office Supplies</SelectItem>
-                      <SelectItem value="electronics">Electronics</SelectItem>
-                      <SelectItem value="furniture">Furniture</SelectItem>
-                      <SelectItem value="equipment">Equipment</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="quantity">Quantity</Label>
-                  <Input
-                    id="quantity"
-                    name="quantity"
-                    type="number"
-                    value={editFormData.quantity}
-                    onChange={handleEditInputChange}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="unit">Unit</Label>
-                  <Input
-                    id="unit"
-                    name="unit"
-                    value={editFormData.unit}
-                    onChange={handleEditInputChange}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="condition">Condition</Label>
-                  <Select
-                    value={editFormData.condition}
-                    onValueChange={(value) =>
-                      setEditFormData((prev) => ({ ...prev, condition: value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select condition" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="good">Good</SelectItem>
-                      <SelectItem value="fair">Fair</SelectItem>
-                      <SelectItem value="poor">Poor</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select
-                    value={editFormData.status}
-                    onValueChange={(value) =>
-                      setEditFormData((prev) => ({ ...prev, status: value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="available">Available</SelectItem>
-                      <SelectItem value="low_stock">Low Stock</SelectItem>
-                      <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="expiration_date">Expiration Date</Label>
-                  <Input
-                    id="expiration_date"
-                    name="expiration_date"
-                    type="date"
-                    value={editFormData.expiration_date}
-                    onChange={handleEditInputChange}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="department_id">Department</Label>
-                  <Select
-                    value={editFormData.department_id ? String(editFormData.department_id) : "none"}
-                    onValueChange={(value) =>
-                      setEditFormData((prev) => ({ ...prev, department_id: value === "none" ? null : value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {departments.map(dept => (
-                        <SelectItem key={dept.department_id} value={String(dept.department_id)}>
-                          {dept.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-sm font-medium">
+                      Item Name <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={editFormData.name}
+                      onChange={handleEditInputChange}
+                      placeholder="Enter item name"
+                      className="focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="category_id" className="text-sm font-medium">
+                      Category <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={editFormData.category_id}
+                      onValueChange={(value) =>
+                        setEditFormData((prev) => ({ ...prev, category_id: value }))
+                      }
+                    >
+                      <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(cat => (
+                          <SelectItem key={cat.category_id} value={String(cat.category_id)}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description" className="text-sm font-medium">
+                      Description
+                    </Label>
+                    <Input
+                      id="description"
+                      name="description"
+                      value={editFormData.description}
+                      onChange={handleEditInputChange}
+                      placeholder="Enter item description"
+                      className="focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="department_id" className="text-sm font-medium">
+                      Department <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={editFormData.department_id ? String(editFormData.department_id) : "none"}
+                      onValueChange={(value) =>
+                        setEditFormData((prev) => ({ ...prev, department_id: value === "none" ? null : value }))
+                      }
+                    >
+                      <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
+                        <SelectValue placeholder="Select department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {departments.map(dept => (
+                          <SelectItem key={dept.department_id} value={String(dept.department_id)}>
+                            {dept.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsEditDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Saving..." : "Save Changes"}
-                </Button>
+
+              {/* Quantity and Status Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Quantity & Status</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity" className="text-sm font-medium">
+                      Quantity <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="quantity"
+                      name="quantity"
+                      type="number"
+                      min="0"
+                      value={editFormData.quantity}
+                      onChange={handleEditInputChange}
+                      placeholder="0"
+                      className="focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="unit" className="text-sm font-medium">
+                      Unit <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="unit"
+                      name="unit"
+                      value={editFormData.unit}
+                      onChange={handleEditInputChange}
+                      placeholder="e.g., pieces, boxes"
+                      className="focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="unit_cost" className="text-sm font-medium">
+                      Unit Cost
+                    </Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                      <Input
+                        id="unit_cost"
+                        name="unit_cost"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={editFormData.unit_cost}
+                        onChange={handleEditInputChange}
+                        placeholder="0.00"
+                        className="pl-8 focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="condition" className="text-sm font-medium">
+                      Condition
+                    </Label>
+                    <Select
+                      value={editFormData.condition}
+                      onValueChange={(value) =>
+                        setEditFormData((prev) => ({ ...prev, condition: value }))
+                      }
+                    >
+                      <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
+                        <SelectValue placeholder="Select condition" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="good">Good</SelectItem>
+                        <SelectItem value="fair">Fair</SelectItem>
+                        <SelectItem value="poor">Poor</SelectItem>
+                        <SelectItem value="damaged">Damaged</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status" className="text-sm font-medium">
+                      Status
+                    </Label>
+                    <Select
+                      value={editFormData.status}
+                      onValueChange={(value) =>
+                        setEditFormData((prev) => ({ ...prev, status: value }))
+                      }
+                    >
+                      <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="available">Available</SelectItem>
+                        <SelectItem value="assigned">Assigned</SelectItem>
+                        <SelectItem value="disposed">Disposed</SelectItem>
+                        <SelectItem value="lost">Lost</SelectItem>
+                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                        <SelectItem value="reserved">Reserved</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location" className="text-sm font-medium">
+                      Location
+                    </Label>
+                    <Input
+                      id="location"
+                      name="location"
+                      value={editFormData.location}
+                      onChange={handleEditInputChange}
+                      placeholder="e.g., Storage Room 101"
+                      className="focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Dates Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Important Dates</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">
+                      Acquisition Date
+                    </Label>
+                    <DatePicker
+                      date={editFormData.acquisition_date}
+                      onDateChange={(date) => handleEditDateChange('acquisition_date', date)}
+                      placeholder="Select acquisition date"
+                      className="focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">
+                      Expiration Date
+                    </Label>
+                    <DatePicker
+                      date={editFormData.expiration_date}
+                      onDateChange={(date) => handleEditDateChange('expiration_date', date)}
+                      placeholder="Select expiration date"
+                      className="focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Identification Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Identification</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="serial_number" className="text-sm font-medium">
+                      Serial Number
+                    </Label>
+                    <Input
+                      id="serial_number"
+                      name="serial_number"
+                      value={editFormData.serial_number}
+                      onChange={handleEditInputChange}
+                      placeholder="Enter serial number"
+                      className="focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="property_number" className="text-sm font-medium">
+                      Property Number
+                    </Label>
+                    <Input
+                      id="property_number"
+                      name="property_number"
+                      value={editFormData.property_number}
+                      onChange={handleEditInputChange}
+                      placeholder="Enter property number"
+                      className="focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter className="pt-6 border-t">
+                <div className="flex gap-3 w-full justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsEditDialogOpen(false)}
+                    className="px-6"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="px-6 bg-blue-600 hover:bg-blue-700"
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Saving...
+                      </div>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </Button>
+                </div>
               </DialogFooter>
             </form>
           </DialogContent>
